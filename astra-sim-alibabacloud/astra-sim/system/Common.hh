@@ -115,6 +115,52 @@ enum class EventType {
   CommProcessingFinished,
   NotInitialized
 };
+inline std::ostream& operator<<(std::ostream& os, const EventType& event) {
+        switch (event) {
+            case EventType::NONE: os << "NONE"; break;
+            case EventType::RendezvousSend: os << "RendezvousSend"; break;
+            case EventType::RendezvousRecv: os << "RendezvousRecv"; break;
+            case EventType::CallEvents: os << "CallEvents"; break;
+            case EventType::PacketReceived: os << "PacketReceived"; break;
+            case EventType::PacketSent: os << "PacketSent"; break;
+            case EventType::PacketSentFinshed: os << "PacketSentFinshed"; break;
+            case EventType::WaitForVnetTurn: os << "WaitForVnetTurn"; break;
+            case EventType::NCCL_General: os << "NCCL_General"; break;
+            case EventType::General: os << "General"; break;
+            case EventType::TX_DMA: os << "TX_DMA"; break;
+            case EventType::RX_DMA: os << "RX_DMA"; break;
+            case EventType::Wight_Grad_Comm_Finished: os << "Wight_Grad_Comm_Finished"; break;
+            case EventType::Input_Grad_Comm_Finished: os << "Input_Grad_Comm_Finished"; break;
+            case EventType::Fwd_Comm_Finished: os << "Fwd_Comm_Finished"; break;
+            case EventType::Wight_Grad_Comm_Finished_After_Delay: os << "Wight_Grad_Comm_Finished_After_Delay"; break;
+            case EventType::Input_Grad_Comm_Finished_After_Delay: os << "Input_Grad_Comm_Finished_After_Delay"; break;
+            case EventType::Fwd_Comm_Finished_After_Delay: os << "Fwd_Comm_Finished_After_Delay"; break;
+            case EventType::Workload_Wait: os << "Workload_Wait"; break;
+            case EventType::Reduction_Ready: os << "Reduction_Ready"; break;
+            case EventType::Rec_Finished: os << "Rec_Finished"; break;
+            case EventType::Send_Finished: os << "Send_Finished"; break;
+            case EventType::Processing_Finished: os << "Processing_Finished"; break;
+            case EventType::Delivered: os << "Delivered"; break;
+            case EventType::NPU_to_MA: os << "NPU_to_MA"; break;
+            case EventType::MA_to_NPU: os << "MA_to_NPU"; break;
+            case EventType::Read_Port_Free: os << "Read_Port_Free"; break;
+            case EventType::Write_Port_Free: os << "Write_Port_Free"; break;
+            case EventType::Apply_Boost: os << "Apply_Boost"; break;
+            case EventType::Stream_Transfer_Started: os << "Stream_Transfer_Started"; break;
+            case EventType::Stream_Ready: os << "Stream_Ready"; break;
+            case EventType::Consider_Process: os << "Consider_Process"; break;
+            case EventType::Consider_Retire: os << "Consider_Retire"; break;
+            case EventType::Consider_Send_Back: os << "Consider_Send_Back"; break;
+            case EventType::StreamInit: os << "StreamInit"; break;
+            case EventType::StreamsFinishedIncrease: os << "StreamsFinishedIncrease"; break;
+            case EventType::CommProcessingFinished: os << "CommProcessingFinished"; break;
+            case EventType::NotInitialized: os << "NotInitialized"; break;
+            default: os << "UNKNOWN"; break;
+        }
+        return os;
+    }
+
+
 class CloneInterface {
  public:
   virtual CloneInterface* clone() const = 0;

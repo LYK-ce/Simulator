@@ -1963,6 +1963,11 @@ void Sys::try_register_event(
       event_queue[Sys::boostedTick() + cycles] = tmp;
       should_schedule = true;
     }
+    recorded_event_types.push_back(event);
+    if (id == 0)
+    {
+      print_recorded_event_types();
+    }
     event_queue[Sys::boostedTick() + cycles].push_back(
         std::make_tuple(callable, event, callData));
     #ifdef NS3_MTP
@@ -2112,5 +2117,12 @@ AstraSim::timespec_t Sys::generate_time(int cycles) {
   double addition = cycles * ((double)CLOCK_PERIOD);
   tmp.time_val = addition;
   return tmp;
+}
+
+void Sys::print_recorded_event_types()  {
+    std::cout << "Recorded Event Types:" << std::endl;
+    for (const auto& event_type : recorded_event_types) {
+        std::cout << "  Event Type: " << event_type << std::endl;
+    }
 }
 } // namespace AstraSim

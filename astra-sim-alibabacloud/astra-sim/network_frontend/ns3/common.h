@@ -790,8 +790,8 @@ void SetupNetwork(void (*qp_finish)(FILE *, Ptr<RdmaQueuePair>),void (*send_fini
 
     fflush(stdout);
 
-    NetDeviceContainer d = qbb.Install(snode, dnode);
-    if (snode->GetNodeType() == 0 || snode->GetNodeType() == 2) {
+    NetDeviceContainer d = qbb.Install(snode, dnode);//真正生成ns3网卡+通道对象
+    if (snode->GetNodeType() == 0 || snode->GetNodeType() == 2) {//仅给服务器或者nvswitch配置地址
       Ptr<Ipv4> ipv4 = snode->GetObject<Ipv4>();
       ipv4->AddInterface(d.Get(0));
       ipv4->AddAddress(
@@ -803,7 +803,7 @@ void SetupNetwork(void (*qp_finish)(FILE *, Ptr<RdmaQueuePair>),void (*send_fini
       ipv4->AddAddress(
           1, Ipv4InterfaceAddress(serverAddress[dst], Ipv4Mask(0xff000000)));
     }
-
+    //建立双向邻居表
     nbr2if[snode][dnode].idx =
         DynamicCast<QbbNetDevice>(d.Get(0))->GetIfIndex();
     nbr2if[snode][dnode].up = true;
@@ -828,7 +828,7 @@ void SetupNetwork(void (*qp_finish)(FILE *, Ptr<RdmaQueuePair>),void (*send_fini
     char ipstring[16];
     sprintf(ipstring, "10.%d.%d.0", i / 254 + 1, i % 254 + 1);
     ipv4.SetBase(ipstring, "255.255.255.0");
-    ipv4.Assign(d);
+    ipv4.Assign(d);//自动给两端网卡分配IP地址
 
     DynamicCast<QbbNetDevice>(d.Get(0))->TraceConnectWithoutContext(
         "QbbPfc", MakeBoundCallback(&get_pfc, pfc_file,
@@ -837,7 +837,7 @@ void SetupNetwork(void (*qp_finish)(FILE *, Ptr<RdmaQueuePair>),void (*send_fini
         "QbbPfc", MakeBoundCallback(&get_pfc, pfc_file,
                                     DynamicCast<QbbNetDevice>(d.Get(1))));
   }
-
+  //给所有交换芯片逐端口配置ECN阈值，PFC发送逻辑，
   nic_rate = get_nic_rate(n);
   for (uint32_t i = 0; i < node_num; i++) {
     if (n.Get(i)->GetNodeType() == 1) { 
@@ -891,7 +891,7 @@ void SetupNetwork(void (*qp_finish)(FILE *, Ptr<RdmaQueuePair>),void (*send_fini
 			sw->m_mmu->node_id = sw->GetId();
 		}
   }
-
+//为每一个计算节点安装一张RDMA网卡，并对这张网卡进行完整的无损以太网参数化配置，最后把性能事件（流完成、发送完成）挂接到回调函数上
 #if ENABLE_QP
   FILE *fct_output = fopen(fct_output_file.c_str(), "w");
   FILE *send_output = fopen(send_output_file.c_str(), "w");

@@ -59,7 +59,7 @@ struct sim_event {
   int tag;
   string fnType;
 };
-
+//把AI集合通信语义封装成ns-3事件
 class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
 private:
   int npu_offset;
@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
   MtpInterface::Enable(user_param.thread);
   #endif
   
-  main1(user_param.network_topo,user_param.network_conf);
+  main1(user_param.network_topo,user_param.network_conf);//setup network根据拓扑文件，搭建网络拓扑
   int nodes_num = node_num - switch_num;
   int gpu_num = node_num - nvswitch_num - switch_num;
 
@@ -325,8 +325,12 @@ int main(int argc, char *argv[]) {
   std::cout << "simulator run " << std::endl;
 
   Simulator::Run();
+  systems[0]->print_recorded_event_types();
   Simulator::Stop(Seconds(2000000000));
+  
   Simulator::Destroy();
+
+
   
   #ifdef NS3_MPI
   MpiInterface::Disable ();

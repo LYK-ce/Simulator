@@ -155,6 +155,10 @@ class Sys : public Callable {
   std::map<std::string, LogicalTopology*> logical_topologies;
   std::map<Tick, std::list<std::tuple<Callable*, EventType, CallData*>>>
       event_queue;
+
+std::list<EventType> recorded_event_types;
+void print_recorded_event_types();
+
   int total_nodes;
   static Tick offset;
   static std::vector<Sys*> all_generators;
