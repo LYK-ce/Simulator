@@ -7,6 +7,7 @@ LICENSE file in the root directory of this source tree.
 #include "CSVWriter.hh"
 #include "Layer.hh"
 #include "astra-sim/system/MockNcclLog.h"
+#include "Event.hh"
 
 namespace AstraSim {
 Workload::~Workload() {
@@ -85,6 +86,9 @@ void Workload::initialize_stat_files() {
   end_to_end->initialize_csv(SIZE * total_rows + 20, 50);
 }
 void Workload::call(EventType event, CallData* data) {
+  printf("workload::call event type: %d, id: %d, time: %lu \n", event, generator->id, Sys::boostedTick());
+  // AstraSim::Event myevent("MyEvent", 10);
+  // myevent.Iterate();
   if (counter > 0) {
     if(generator->id == 0) std::cout << "counter > 0" << std::endl;
     generator->try_register_event(

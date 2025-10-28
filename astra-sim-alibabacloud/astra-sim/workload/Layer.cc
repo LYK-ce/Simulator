@@ -90,6 +90,8 @@ Layer::Layer(
 }
 
 void Layer::call(EventType event, CallData* mdata) {
+  printf("!!!!!!!!!!!*******************************************!!!!!!!!!!!!!!!!!!!!\n");
+  printf("Layer %s call event %d at time %llu\n", id.c_str(), (int)event, Sys::boostedTick());
   if (event == EventType::Wight_Grad_Comm_Finished) {
     last_wg_finished = Sys::boostedTick();
     generator->register_event(

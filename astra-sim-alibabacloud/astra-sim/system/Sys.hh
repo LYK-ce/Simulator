@@ -28,6 +28,7 @@ LICENSE file in the root directory of this source tree.
 #include "astra-sim/system/MockNcclChannel.h"
 #include "astra-sim/system/topology/RingTopology.hh"
 #include "astra-sim/workload/Workload.hh"
+//#include "astra-sim/workload/Workload_StateMachine.hh"
 #ifdef NS3_MTP
 #include "ns3/mtp-interface.h"
 #endif
@@ -43,6 +44,7 @@ class SimSendCaller;
 class SimRecvCaller;
 class QueueLevels;
 class Workload;
+class Workload_StateMachine;
 class LogicalTopology;
 class BasicLogicalTopology;
 class OfflineGreedy;
@@ -136,7 +138,7 @@ class Sys : public Callable {
   uint64_t pending_events;
   std::string method;
 
-  Workload* workload;
+  Workload_StateMachine* workload;
   MemBus* memBus;
   int all_queues;
   std::list<BaseStream*> ready_list;
@@ -153,7 +155,7 @@ class Sys : public Callable {
   std::vector<std::vector<std::string>> ata_ratio_data;
   QueueLevels* vLevels;
   std::map<std::string, LogicalTopology*> logical_topologies;
-  std::map<Tick, std::list<std::tuple<Callable*, EventType, CallData*>>>
+  std::map<Tick, std::list<std::tuple<Callable*, EventType, CallData*>>>//把这个转换成event
       event_queue;
 
 std::list<EventType> recorded_event_types;

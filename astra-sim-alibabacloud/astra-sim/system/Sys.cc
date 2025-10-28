@@ -29,7 +29,7 @@ LICENSE file in the root directory of this source tree.
 #include "astra-sim/system/topology/Torus3D.hh"
 #include "astra-sim/system/MockNcclLog.h"
 #include "astra-sim/workload/Layer.hh"
-
+#include "astra-sim/workload/WorkLoad_StateMachine.hh"
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -282,7 +282,8 @@ Sys::Sys(
       model_shared_bus,
       communication_delay,
       true);
-  workload = new Workload(
+  workload = new Workload_StateMachine(
+  //workload = new Workload(
       run_name,
       this,
       my_workload,
@@ -1651,7 +1652,7 @@ DataSet* Sys::generate_collective(
       newStream->current_queue_id = -1;
       #ifdef PHY_MTP
       insert_into_running_list(newStream);
-      #endif
+      #endif//在这里进行了try register
       insert_into_ready_list(newStream);
       MockNcclLog* NcclLog = MockNcclLog::getInstance();
       NcclLog->writeLog(NcclLogLevel::DEBUG,"Sys::generate_collective finished");
@@ -1964,10 +1965,10 @@ void Sys::try_register_event(
       should_schedule = true;
     }
     recorded_event_types.push_back(event);
-    if (id == 0)
-    {
-      print_recorded_event_types();
-    }
+    // if (id == 0)
+    // {
+    //   print_recorded_event_types();
+    // }
     event_queue[Sys::boostedTick() + cycles].push_back(
         std::make_tuple(callable, event, callData));
     #ifdef NS3_MTP

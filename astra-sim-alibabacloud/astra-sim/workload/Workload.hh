@@ -5,7 +5,7 @@ LICENSE file in the root directory of this source tree.
 
 #ifndef __WORKLOAD_HH__
 #define __WORKLOAD_HH__
-
+#pragma message("REAL Workload included")
 #include <fcntl.h>
 #include <math.h>
 #include <sys/stat.h>
@@ -46,8 +46,8 @@ enum class ParallelismPolicy {
   All,
   None
 };
-
-class Workload : Callable {
+//Workload需要public继承Callable
+class Workload : public Callable {
  public:
   enum class LoopState {
     Forward_Pass,
@@ -92,7 +92,7 @@ class Workload : Callable {
       std::string path,
       bool seprate_log);
   ParallelismPolicy decode_parallelsim(std::string parallelism);
-  void call(EventType event, CallData* data);
+  virtual void call(EventType event, CallData* data);//改成虚函数
   void iterate_micro_benchmark();
   void iterate_data_parallel();
   void iterate_hybrid_parallel_Transformer();

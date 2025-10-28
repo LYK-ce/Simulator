@@ -12,7 +12,9 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-
+#include "astra-sim/workload/Event.hh"
+#include "astra-sim/workload/NCCL_Event.hh"
+#include "astra-sim/workload/Workload_StateMachine.hh"
 #include "astra-sim/system/AstraNetworkAPI.hh"
 #include "astra-sim/system/Sys.hh"
 #include "astra-sim/system/RecvPacketEventHadndlerData.hh"
@@ -40,6 +42,8 @@
 #include "ns3/mpi-interface.h"
 #include <mpi.h>
 #endif
+
+
 
 #define RESULT_PATH "./ncclFlowModel_"
 
@@ -319,13 +323,21 @@ int main(int argc, char *argv[]) {
     systems[j ]->nvswitch_id = node2nvswitch[j];
     systems[j ]->num_gpus = nodes_num - nvswitch_num;
   }
+
+  for (int i = 0; i < nodes_num; i++) {
+    systems[i]->workload->event_queue->append(new AstraSim::Event("StartEvent"));
+    systems[i]->workload->event_queue->append(new AstraSim::Event("SecondEvent"));
+    systems[i]->workload->event_queue->append(new AstraSim::NCCL_Event("NCCL_Event"));
+  }
+
+  
+
   for (int i = 0; i < nodes_num; i++) {
     systems[i]->workload->fire();
   }
   std::cout << "simulator run " << std::endl;
 
   Simulator::Run();
-  systems[0]->print_recorded_event_types();
   Simulator::Stop(Seconds(2000000000));
   
   Simulator::Destroy();
