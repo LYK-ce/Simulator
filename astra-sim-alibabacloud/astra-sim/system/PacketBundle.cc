@@ -8,7 +8,7 @@ LICENSE file in the root directory of this source tree.
 #include "PhyMultiThread.hh"
 namespace AstraSim {
 PacketBundle::PacketBundle(
-    Sys* generator,
+    Device* generator,
     BaseStream* stream,
     std::list<MyPacket*> locked_packets,
     bool needs_processing,
@@ -22,11 +22,11 @@ PacketBundle::PacketBundle(
   this->size = size;
   this->stream = stream;
   this->transmition = transmition;
-  creation_time = Sys::boostedTick();
+  creation_time = Device::boostedTick();
   this->channel_id = -1;
 }
 PacketBundle::PacketBundle(
-    Sys* generator,
+    Device* generator,
     BaseStream* stream,
     std::list<MyPacket*> locked_packets,
     bool needs_processing,
@@ -44,10 +44,10 @@ PacketBundle::PacketBundle(
   this->transmition = transmition;
   this->channel_id = channel_id;
   this->flow_id = flow_id;
-  creation_time = Sys::boostedTick();
+  creation_time = Device::boostedTick();
 }
 PacketBundle::PacketBundle(
-    Sys* generator,
+    Device* generator,
     BaseStream* stream,
     bool needs_processing,
     bool send_back,
@@ -59,7 +59,7 @@ PacketBundle::PacketBundle(
   this->size = size;
   this->stream = stream;
   this->transmition = transmition;
-  creation_time = Sys::boostedTick();
+  creation_time = Device::boostedTick();
   this->channel_id = -1;
 }
 void PacketBundle::send_to_MA() {
@@ -83,7 +83,7 @@ void PacketBundle::call(EventType event, CallData* data) {
         this, EventType::CommProcessingFinished, data, this->delay);
     return;
   }
-  Tick current = Sys::boostedTick();
+  Tick current = Device::boostedTick();
   #ifndef PHY_MTP
   for (auto& packet : locked_packets) {
     packet->ready_time = current;

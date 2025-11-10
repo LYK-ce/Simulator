@@ -24,7 +24,7 @@ LICENSE file in the root directory of this source tree.
 #include "MemMovRequest.hh"
 
 namespace AstraSim {
-class Sys;
+class Device;
 class LogGP : public Callable {
  public:
   enum class State { Free, waiting, Sending, Receiving };
@@ -49,14 +49,14 @@ class LogGP : public Callable {
   std::list<MemMovRequest>::iterator talking_it;
 
   LogGP* partner;
-  Sys* generator;
+  Device* generator;
   EventType trigger_event;
   int subsequent_reads;
   int THRESHOLD;
   int local_reduction_delay;
   LogGP(
       std::string name,
-      Sys* generator,
+      Device* generator,
       Tick L,
       Tick o,
       Tick g,
@@ -72,7 +72,7 @@ class LogGP : public Callable {
   void call(EventType event, CallData* data);
   MemBus* NPU_MEM;
   void attach_mem_bus(
-      Sys* generator,
+      Device* generator,
       Tick L,
       Tick o,
       Tick g,

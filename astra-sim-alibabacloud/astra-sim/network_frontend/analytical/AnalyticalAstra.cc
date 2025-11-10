@@ -103,7 +103,7 @@ int main(int argc,char *argv[]) {
   
   
   AnalyticalNetWork *analytical_network = new AnalyticalNetWork(0);
-  AstraSim::Sys *systems = new AstraSim::Sys(
+  AstraSim::Device *systems = new AstraSim::Device(
     analytical_network,
     nullptr,
     0,

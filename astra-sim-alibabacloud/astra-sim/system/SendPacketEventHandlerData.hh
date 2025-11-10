@@ -37,7 +37,7 @@ class SendPacketEventHandlerData : public BasicEventHandlerData,
   int child_flow_id;
   int channel_id;
   AstraSim::ncclFlowTag flowTag;
-  SendPacketEventHandlerData(Sys *node, int senderNodeId, int receiverNodeId, int tag);
+  SendPacketEventHandlerData(Device *node, int senderNodeId, int receiverNodeId, int tag);
   SendPacketEventHandlerData(BaseStream* owner, int senderNodeId, int receiverNodeId,int tag,EventType event);
 };
 } // namespace AstraSim

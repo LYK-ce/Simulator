@@ -28,7 +28,7 @@ namespace AstraSim {
 
         // 虚析构函数，确保派生类的析构函数被正确调用
         virtual ~Event();
-        virtual void process(Sys* generator, Workload_StateMachine* workload) ;
+        virtual void process(Device* generator, Workload_StateMachine* workload) ;
 
   
     };    

@@ -21,19 +21,19 @@ LICENSE file in the root directory of this source tree.
 #include "Common.hh"
 
 namespace AstraSim {
-class Sys;
+class Device;
 class Algorithm;
 class BaseStream;
 class CollectivePhase {
  public:
-  Sys* generator;
+  Device* generator;
   int queue_id;
   uint64_t initial_data_size;
   uint64_t final_data_size;
   bool enabled;
   ComType comm_type;
   Algorithm* algorithm;
-  CollectivePhase(Sys* generator, int queue_id, Algorithm* algorithm);
+  CollectivePhase(Device* generator, int queue_id, Algorithm* algorithm);
   CollectivePhase();
   void init(BaseStream* stream);
 };

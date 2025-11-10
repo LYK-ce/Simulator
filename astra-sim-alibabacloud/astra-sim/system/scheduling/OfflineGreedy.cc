@@ -16,7 +16,7 @@ DimElapsedTime::DimElapsedTime(int dim_num) {
   this->dim_num = dim_num;
   this->elapsed_time = 0;
 }
-OfflineGreedy::OfflineGreedy(Sys* sys) {
+OfflineGreedy::OfflineGreedy(Device* sys) {
   this->sys = sys;
   if (sys->dim_to_break == -1) {
     this->dim_size = sys->physical_dims;

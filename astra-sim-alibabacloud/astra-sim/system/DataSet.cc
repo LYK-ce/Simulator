@@ -16,7 +16,7 @@ DataSet::DataSet(int total_streams) {
   this->finished = false;
   this->finish_tick = 0;
   this->active = true;
-  this->creation_tick = Sys::boostedTick();
+  this->creation_tick = Device::boostedTick();
   this->notifier = nullptr;
 }
 void DataSet::set_notifier(Callable* layer, EventType event) {
@@ -31,7 +31,7 @@ void DataSet::notify_stream_finished(StreamStat* data) {
   }
   if (finished_streams == total_streams) {
     finished = true;
-    finish_tick = Sys::boostedTick();
+    finish_tick = Device::boostedTick();
     if (notifier != nullptr) {
       NcclLog->writeLog(NcclLogLevel::DEBUG,"notify_stream_finished notifier != nullptr ");
       take_stream_stats_average();

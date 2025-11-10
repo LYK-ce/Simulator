@@ -353,13 +353,13 @@ bool NcclTreeFlowModel::recv_ready(int channel_id, int flow_id) {
     ehd->flowTag.tag_id =layer_num*flow_model.chunk_count*m_channels+ flow_model.chunk_count*flow_model.channel_id;
       stream->owner->front_end_sim_recv(
           0,
-          Sys::dummy_data,
+          Device::dummy_data,
           _flow_models[std::make_pair(channel_id, flow_id)].flow_size,
           UINT8,
           recv_prev,
           channel_id,
           &rcv_req,
-          &Sys::handleEvent,
+          &Device::handleEvent,
           ehd);
   }
   return true;
@@ -507,7 +507,7 @@ void NcclTreeFlowModel::insert_packets(int channel_id, int flow_id) {
     NcclLog->writeLog(NcclLogLevel::DEBUG,"id:  %d (*non_zero_latency_packets)[channel_id] : %d ",id,(*non_zero_latency_packets)[channel_id]);
     return;
   }
-  Sys::sys_panic("should not inject nothing!");
+  Device::sys_panic("should not inject nothing!");
 }
 
 bool NcclTreeFlowModel::ready(int channel_id, int flow_id) {
@@ -550,13 +550,13 @@ bool NcclTreeFlowModel::ready(int channel_id, int flow_id) {
     if (free_packets[std::make_pair(channel_id, recv_prev)] > 0) {
       stream->owner->front_end_sim_recv(
           0,
-          Sys::dummy_data,
+          Device::dummy_data,
           rcv_req.reqCount,
           UINT8,
           recv_prev,
           rcv_req.tag,
           &rcv_req,
-          &Sys::handleEvent,
+          &Device::handleEvent,
           ehd);
     }
   }
@@ -594,13 +594,13 @@ bool NcclTreeFlowModel::ready(int channel_id, int flow_id) {
       EventType::PacketSentFinshed);
   stream->owner->front_end_sim_send(
       0,
-      Sys::dummy_data,
+      Device::dummy_data,
       snd_req.reqCount,
       UINT8,
       packet.preferred_dest,
       snd_req.flowTag.tag_id,
       &snd_req,
-      &Sys::handleEvent,
+      &Device::handleEvent,
       send_ehd);
   return true;
 }
@@ -682,13 +682,13 @@ bool NcclTreeFlowModel::phy_ready(int channel_id,int flow_id) {
     if (free_packets[std::make_pair(channel_id, recv_prev)] > 0) {
       stream->owner->front_end_sim_recv(
           0,
-          Sys::dummy_data,
+          Device::dummy_data,
           rcv_req.reqCount,
           UINT8,
           recv_prev,
           rcv_req.tag,
           &rcv_req,
-          &Sys::handleEvent,
+          &Device::handleEvent,
           ehd);
     }
   }
@@ -726,13 +726,13 @@ bool NcclTreeFlowModel::phy_ready(int channel_id,int flow_id) {
       EventType::PacketSentFinshed);
   stream->owner->front_end_sim_send(
       0,
-      Sys::dummy_data,
+      Device::dummy_data,
       snd_req.reqCount,
       UINT8,
       flow.dest,
       snd_req.tag,
       &snd_req,
-      &Sys::handleEvent,
+      &Device::handleEvent,
       send_ehd);
   return true;
 }

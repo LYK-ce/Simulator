@@ -7,7 +7,7 @@ LICENSE file in the root directory of this source tree.
 #include "astra-sim/system/collective/Algorithm.hh"
 namespace AstraSim {
 CollectivePhase::CollectivePhase(
-    Sys* generator,
+    Device* generator,
     int queue_id,
     Algorithm* algorithm) {
   this->generator = generator;

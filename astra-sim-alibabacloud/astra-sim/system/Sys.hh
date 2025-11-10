@@ -56,11 +56,18 @@ enum ParallelStrategy {
     DP_EP,
     NONE
 };
-class Sys : public Callable {
+
+
+// 设备中的一些枚举类型
+enum ProtocolType { IB };
+enum Role { Leaf,Spine,Core};
+
+
+class Device : public Callable {
  public:
   class SchedulerUnit {
    public:
-    Sys* sys;
+    Device* sys;
     int ready_list_threshold;
     int queue_threshold;
     int max_running_streams;
@@ -74,7 +81,7 @@ class Sys : public Callable {
     std::vector<UsageTracker> usage;
 
     SchedulerUnit(
-        Sys* sys,
+        Device* sys,
         std::vector<int> queues,
         int max_running_streams,
         int ready_list_threshold,
@@ -85,7 +92,7 @@ class Sys : public Callable {
     std::vector<double> get_average_latency_per_dimension();
   };
   SchedulerUnit* scheduler_unit;
-  ~Sys();
+  ~Device();
   AstraNetworkAPI* NI;
   AstraMemoryAPI* MEM;
   int finished_workloads;
@@ -139,6 +146,7 @@ class Sys : public Callable {
   std::string method;
 
   Workload_StateMachine* workload;
+  //Workload* workload;
   MemBus* memBus;
   int all_queues;
   std::list<BaseStream*> ready_list;
@@ -163,7 +171,7 @@ void print_recorded_event_types();
 
   int total_nodes;
   static Tick offset;
-  static std::vector<Sys*> all_generators;
+  static std::vector<Device*> all_generators;
   static uint8_t* dummy_data;
   uint64_t streams_injected;
   uint64_t streams_finished;
@@ -231,7 +239,7 @@ void print_recorded_event_types();
   std::map<std::pair<int, int>, std::list<SimSendCaller*>> pending_sends;
   std::map<std::pair<int, int>, bool> is_there_pending_sends;
 
-  Sys(AstraNetworkAPI* NI,
+  Device(AstraNetworkAPI* NI,
       AstraMemoryAPI* MEM,
       int id,
       int npu_offset,

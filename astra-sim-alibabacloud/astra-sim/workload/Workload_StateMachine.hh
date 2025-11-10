@@ -70,7 +70,7 @@ namespace AstraSim
     class Workload_StateMachine : public Workload {
     public:
     Workload_StateMachine(std::string run_name,
-                Sys* generator,
+                Device* generator,
                 std::string name,
                 int TOTAL_PASS,
                 int total_rows,

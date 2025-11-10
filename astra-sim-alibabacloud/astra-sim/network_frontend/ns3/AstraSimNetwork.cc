@@ -35,6 +35,14 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
+
+//具体设备实现相关头文件
+#include "astra-sim/system/Device_GPU.hh"
+#include "astra-sim/system/Device_HostCPU.hh"
+#include "astra-sim/system/Device_NIC.hh"
+#include "astra-sim/system/Device_NVSwitch.hh"
+#include "astra-sim/system/Device_Switch.hh"
+
 #ifdef NS3_MTP
 #include "ns3/mtp-interface.h"
 #endif
@@ -291,12 +299,13 @@ int main(int argc, char *argv[]) {
   LogComponentEnable("GENERIC_SIMULATION", LOG_LEVEL_INFO);
 
   std::vector<ASTRASimNetwork *> networks(nodes_num, nullptr);
-  std::vector<AstraSim::Sys *> systems(nodes_num, nullptr);
+  std::vector<AstraSim::Device *> systems(nodes_num, nullptr);
 
   for (int j = 0; j < nodes_num; j++) {
     networks[j] =
         new ASTRASimNetwork(j ,0);
-    systems[j ] = new AstraSim::Sys(
+    //systems[j ] = new AstraSim::Device(
+    systems[j ] = new AstraSim::GPUDevice(
         networks[j], //网络接口
         nullptr,     //内存接口   
         j,           //节点ID号             
@@ -318,7 +327,11 @@ int main(int argc, char *argv[]) {
         gpu_type,
         {gpu_num},
         NVswitchs,
-        gpus_per_server
+        gpus_per_server,
+        // 新增GPU参数
+        16384ULL * 1024 * 1024, // 16GB   
+        30.0,                   // 30 TFLOPS
+        4                      // 4 NVLink通道
     );
     systems[j ]->nvswitch_id = node2nvswitch[j];
     systems[j ]->num_gpus = nodes_num - nvswitch_num;

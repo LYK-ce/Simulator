@@ -22,21 +22,21 @@ LICENSE file in the root directory of this source tree.
 #include "Common.hh"
 
 namespace AstraSim {
-class Sys;
+class Device;
 class LogGP;
 class MemBus {
  public:
   enum class Transmition { Fast, Usual };
   LogGP* NPU_side;
   LogGP* MA_side;
-  Sys* generator;
+  Device* generator;
   int communication_delay;
   bool model_shared_bus;
   ~MemBus();
   MemBus(
       std::string side1,
       std::string side2,
-      Sys* generator,
+      Device* generator,
       Tick L,
       Tick o,
       Tick g,

@@ -15,7 +15,7 @@ MemBus::~MemBus() {
 MemBus::MemBus(
     std::string side1,
     std::string side2,
-    Sys* generator,
+    Device* generator,
     Tick L,
     Tick o,
     Tick g,

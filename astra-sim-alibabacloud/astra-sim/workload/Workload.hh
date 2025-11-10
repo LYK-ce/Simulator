@@ -21,7 +21,7 @@ LICENSE file in the root directory of this source tree.
 
 namespace AstraSim {
 class Workload;
-class Sys;
+class Device;
 class Callable;
 class Layer;
 class CSVWriter;
@@ -59,7 +59,7 @@ class Workload : public Callable {
   ~Workload();
   Layer** layers;
   int SIZE;
-  Sys* generator;
+  Device* generator;
   std::string run_type;
   Tick counter;
   int index;
@@ -84,7 +84,7 @@ class Workload : public Callable {
   Tick waiting_for_comm;
   Workload(
       std::string run_name,
-      Sys* generator,
+      Device* generator,
       std::string name,
       int TOTAL_PASS,
       int total_rows,

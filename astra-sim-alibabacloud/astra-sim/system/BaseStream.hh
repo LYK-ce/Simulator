@@ -41,7 +41,7 @@ class BaseStream : public Callable, public StreamStat {
   ComType current_com_type;
   Tick creation_time;
   Tick last_init;
-  Sys* owner;
+  Device* owner;
   DataSet* dataset;
   int steps_finished;
   int initial_data_size;
@@ -62,7 +62,7 @@ class BaseStream : public Callable, public StreamStat {
 
   BaseStream(
       int stream_num,
-      Sys* owner,
+      Device* owner,
       std::list<CollectivePhase> phases_to_go);
 };
 } // namespace AstraSim

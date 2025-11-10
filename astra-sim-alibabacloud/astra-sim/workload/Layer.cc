@@ -25,7 +25,7 @@ namespace AstraSim {
 Layer::Layer(
     std::string id,
     int layer_num,
-    Sys* generator,
+    Device* generator,
     Workload* workload,
     Tick fwd_pass_compute_time,
     ComType fwd_pass_comm_type,
@@ -91,9 +91,9 @@ Layer::Layer(
 
 void Layer::call(EventType event, CallData* mdata) {
   printf("!!!!!!!!!!!*******************************************!!!!!!!!!!!!!!!!!!!!\n");
-  printf("Layer %s call event %d at time %llu\n", id.c_str(), (int)event, Sys::boostedTick());
+  printf("Layer %s call event %d at time %llu\n", id.c_str(), (int)event, Device::boostedTick());
   if (event == EventType::Wight_Grad_Comm_Finished) {
-    last_wg_finished = Sys::boostedTick();
+    last_wg_finished = Device::boostedTick();
     generator->register_event(
         this,
         EventType::Wight_Grad_Comm_Finished_After_Delay,
@@ -101,7 +101,7 @@ void Layer::call(EventType event, CallData* mdata) {
         weight_grad_update_time);
     return;
   } else if (event == EventType::Input_Grad_Comm_Finished) {
-    last_ig_finished = Sys::boostedTick();
+    last_ig_finished = Device::boostedTick();
     generator->register_event(
         this,
         EventType::Input_Grad_Comm_Finished_After_Delay,
@@ -109,7 +109,7 @@ void Layer::call(EventType event, CallData* mdata) {
         input_grad_update_time);
     return;
   } else if (event == EventType::Fwd_Comm_Finished) {
-    last_fwd_finished = Sys::boostedTick();
+    last_fwd_finished = Device::boostedTick();
     generator->register_event(
         this, EventType::Fwd_Comm_Finished_After_Delay, mdata, fwd_update_time);
     return;
@@ -288,7 +288,7 @@ bool Layer::is_fwd_pass_comm_finished_blocking() {
     return true;
   }
   if (started_waiting_for_fwd_pass.size() == 0) {
-    started_waiting_for_fwd_pass.push_back(Sys::boostedTick());
+    started_waiting_for_fwd_pass.push_back(Device::boostedTick());
   }
   return false;
 }
@@ -305,7 +305,7 @@ bool Layer::is_input_grad_comm_finished_blocking() {
     return true;
   }
   if (started_waiting_for_input_grad.size() == 0) {
-    started_waiting_for_input_grad.push_back(Sys::boostedTick());
+    started_waiting_for_input_grad.push_back(Device::boostedTick());
   }
   return false;
 }
@@ -321,7 +321,7 @@ bool Layer::is_weight_grad_comm_finished_blocking() {
     return true;
   }
   if (started_waiting_for_weight_grad.size() == 0) {
-    this->started_waiting_for_weight_grad.push_back(Sys::boostedTick());
+    this->started_waiting_for_weight_grad.push_back(Device::boostedTick());
   }
   return false;
 }
@@ -491,12 +491,12 @@ LayerData Layer::report(
     data = data + "," + to_string(total_input_grad_comm / FREQ);
     data = data + "," + to_string(total_bw.first);
     data = data + "," + to_string(total_bw.second);
-    data = data + "," + to_string(((double)Sys::boostedTick()) / FREQ);
+    data = data + "," + to_string(((double)Device::boostedTick()) / FREQ);
     EndToEnd->write_line(data);
 
     data = "layer_name,"+run_name+",fwd compute,wg compute,ig compute,fwd exposed comm,wg exposed comm,ig exposed comm,fwd total comm,algbw,busbw,wg total comm,algbw,busbw,ig total comm,algbw,busbw,workload finished at";
     if (layer_num == workload->SIZE - 1) {
-      total_exposed = (((double)Sys::boostedTick()) / FREQ) - total_compute;
+      total_exposed = (((double)Device::boostedTick()) / FREQ) - total_compute;
       data = "SUM," + run_name + "," + to_string(total_fwd_time[0]) + "," + to_string(total_wg_time[0]) + "," + to_string(total_ig_time[0]) + "," + to_string(total_fwd_time[1]) + "," + to_string(total_wg_time[1]) + "," + to_string(total_ig_time[1]) + "," + to_string(total_fwd_time[2]) + ",NONE,NONE," + to_string(total_wg_time[2]) + ",NONE,NONE," + to_string(total_ig_time[2]) + ",NONE,NONE";
       EndToEnd->write_line(data);
       double total_time = total_compute + total_exposed;
@@ -725,12 +725,12 @@ LayerData Layer::report(
     data = data + "," + format_value_bs(total_bw.first);
     data = data + "," + format_value_bs(total_bw.second);
 
-    // data = data + "," + format_value(((double)Sys::boostedTick()) / FREQ );
+    // data = data + "," + format_value(((double)Device::boostedTick()) / FREQ );
     EndToEnd->write_line(data);
 
     if (layer_num == workload->SIZE - 1) {
         if (param->mode != ModeType::ANALYTICAL) {
-            total_exposed = (((double)Sys::boostedTick()) / FREQ ) - total_compute;
+            total_exposed = (((double)Device::boostedTick()) / FREQ ) - total_compute;
         }
         //pp commtime
         Tick Expose_PP_time = (2 * vpp * GA * (pp_commsize * GBps / (param->net_work_param.pp_overlap_ratio) * 1e9) / FREQ );
@@ -1201,7 +1201,7 @@ void Layer::issue_forward_pass_comm(
     }
     return;
   } else {
-    Sys::sys_panic("no known collective operation! ");
+    Device::sys_panic("no known collective operation! ");
   }
   #ifndef PHY_MTP
   fwd_pass_datasets[fp->my_id] = fp;
@@ -1384,7 +1384,7 @@ void Layer::issue_input_grad_comm(
   } else {
     std::cout << "no known collective operation! for layer: " << id
               << std::endl;
-    Sys::sys_panic("no known collective operation! ");
+    Device::sys_panic("no known collective operation! ");
   }
   #ifndef PHY_MTP
   input_grad_datasets[ig->my_id] = ig;
@@ -1485,7 +1485,7 @@ void Layer::issue_weight_grad_comm(
       print_involved_dimensions(weight_grad_comm_involved_dimensions);
     }
   } else if (weight_grad_comm_type == ComType::All_Gather) {
-    if(generator->id == 0) std::cout << "Layer issue wg all gather at tick: " << Sys::boostedTick() << std::endl;
+    if(generator->id == 0) std::cout << "Layer issue wg all gather at tick: " << Device::boostedTick() << std::endl;
     #ifdef PHY_MTP
     wg = generator->generate_all_gather(
         weight_grad_comm_size,
@@ -1565,7 +1565,7 @@ void Layer::issue_weight_grad_comm(
     }
     return;
   } else {
-    Sys::sys_panic("no known collective operation! ");
+    Device::sys_panic("no known collective operation! ");
   }
   #ifndef PHY_MTP
   weight_grad_datasets[wg->my_id] = wg;

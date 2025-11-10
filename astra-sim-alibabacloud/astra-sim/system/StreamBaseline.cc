@@ -8,7 +8,7 @@ LICENSE file in the root directory of this source tree.
 #include "astra-sim/system/collective/Algorithm.hh"
 namespace AstraSim {
 StreamBaseline::StreamBaseline(
-    Sys* owner,
+    Device* owner,
     DataSet* dataset,
     int stream_num,
     std::list<CollectivePhase> phases_to_go,
@@ -24,7 +24,7 @@ StreamBaseline::StreamBaseline(
 }
 void StreamBaseline::init() {
   initialized = true;
-  last_init = Sys::boostedTick();
+  last_init = Device::boostedTick();
   if (!my_current_phase.enabled) {
     return;
   }
@@ -34,7 +34,7 @@ void StreamBaseline::init() {
   if (steps_finished == 1) {
     queuing_delay.push_back(last_phase_change - creation_time);
   }
-  queuing_delay.push_back(Sys::boostedTick() - last_phase_change);
+  queuing_delay.push_back(Device::boostedTick() - last_phase_change);
   total_packets_sent = 1;
 }
 void StreamBaseline::call(EventType event, CallData* data) {
@@ -58,7 +58,7 @@ void StreamBaseline::call(EventType event, CallData* data) {
 }
 void StreamBaseline::consume(RecvPacketEventHadndlerData* message) {
   net_message_latency.back() +=
-      Sys::boostedTick() - message->ready_time; 
+      Device::boostedTick() - message->ready_time; 
   net_message_counter++;
   my_current_phase.algorithm->run(EventType::PacketReceived, message);
 }

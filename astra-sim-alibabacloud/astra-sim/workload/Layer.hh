@@ -29,7 +29,7 @@ class Layer : public Callable, public StreamStat {
  public:
   std::string id;
   int layer_num;
-  Sys* generator;
+  Device* generator;
   Workload* workload;
 
   Tick fwd_pass_compute_time;
@@ -89,7 +89,7 @@ class Layer : public Callable, public StreamStat {
   Layer(
       std::string id,
       int layer_num,
-      Sys* generator,
+      Device* generator,
       Workload* workload,
       Tick fwd_pass_compute_time,
       ComType fwd_pass_comm_type,

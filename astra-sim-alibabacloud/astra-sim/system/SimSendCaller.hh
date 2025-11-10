@@ -23,7 +23,7 @@ LICENSE file in the root directory of this source tree.
 #include "Common.hh"
 
 namespace AstraSim {
-class Sys;
+class Device;
 class SimSendCaller : public Callable {
  public:
   void* buffer;
@@ -35,9 +35,9 @@ class SimSendCaller : public Callable {
   void (*msg_handler)(void* fun_arg);
   void* fun_arg;
   void call(EventType type, CallData* data);
-  Sys* generator;
+  Device* generator;
   SimSendCaller(
-      Sys* generator,
+      Device* generator,
       void* buffer,
       uint64_t count,
       int type,

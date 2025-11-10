@@ -13,26 +13,26 @@ UsageTracker::UsageTracker(int levels) {
 }
 void UsageTracker::increase_usage() {
   if (current_level < levels - 1) {
-    Usage u(current_level, last_tick, Sys::boostedTick());
+    Usage u(current_level, last_tick, Device::boostedTick());
     usage.push_back(u);
     current_level++;
-    last_tick = Sys::boostedTick();
+    last_tick = Device::boostedTick();
   }
 }
 void UsageTracker::decrease_usage() {
   if (current_level > 0) {
-    Usage u(current_level, last_tick, Sys::boostedTick());
+    Usage u(current_level, last_tick, Device::boostedTick());
     usage.push_back(u);
     current_level--;
-    last_tick = Sys::boostedTick();
+    last_tick = Device::boostedTick();
   }
 }
 void UsageTracker::set_usage(int level) {
   if (current_level != level) {
-    Usage u(current_level, last_tick, Sys::boostedTick());
+    Usage u(current_level, last_tick, Device::boostedTick());
     usage.push_back(u);
     current_level = level;
-    last_tick = Sys::boostedTick();
+    last_tick = Device::boostedTick();
   }
 }
 void UsageTracker::report(CSVWriter* writer, int offset) {

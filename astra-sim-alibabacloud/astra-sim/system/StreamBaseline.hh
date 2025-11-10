@@ -24,11 +24,11 @@ LICENSE file in the root directory of this source tree.
 #include "RecvPacketEventHadndlerData.hh"
 
 namespace AstraSim {
-class Sys;
+class Device;
 class StreamBaseline : public BaseStream {
  public:
   StreamBaseline(
-      Sys* owner,
+      Device* owner,
       DataSet* dataset,
       int stream_num,
       std::list<CollectivePhase> phases_to_go,

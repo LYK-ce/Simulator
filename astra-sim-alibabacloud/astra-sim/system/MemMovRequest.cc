@@ -10,7 +10,7 @@ namespace AstraSim {
 int MemMovRequest::id = 0;
 MemMovRequest::MemMovRequest(
     int request_num,
-    Sys* generator,
+    Device* generator,
     LogGP* loggp,
     int size,
     int latency,
@@ -31,7 +31,7 @@ MemMovRequest::MemMovRequest(
   this->total_processing_queue_time = 0;
   this->total_processing_time = 0;
   this->request_num = request_num;
-  this->start_time = Sys::boostedTick();
+  this->start_time = Device::boostedTick();
   this->mem_bus_finished = true;
 }
 void MemMovRequest::call(EventType event, CallData* data) {

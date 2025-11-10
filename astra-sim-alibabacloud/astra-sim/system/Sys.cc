@@ -37,12 +37,12 @@ LICENSE file in the root directory of this source tree.
 MockNccl::MockNcclGroup* GlobalGroup = nullptr;
 
 namespace AstraSim {
-std::atomic<bool> Sys::g_sys_inCriticalSection(false);
-Tick Sys::offset = 0;
-uint8_t* Sys::dummy_data = new uint8_t[2];
-std::vector<Sys*> Sys::all_generators;
+std::atomic<bool> Device::g_sys_inCriticalSection(false);
+Tick Device::offset = 0;
+uint8_t* Device::dummy_data = new uint8_t[2];
+std::vector<Device*> Device::all_generators;
 
-Sys::~Sys() {
+Device::~Device() {
   end_sim_time = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::minutes>(
       end_sim_time - start_sim_time);
@@ -116,7 +116,7 @@ Sys::~Sys() {
   #endif
 }
 
-Sys::Sys(
+Device::Device(
     AstraNetworkAPI* NI,  //网络接口
     AstraMemoryAPI* MEM,  //内存接口
     int id,                 //当前节点ID
@@ -325,7 +325,7 @@ Sys::Sys(
   this->initialized = true;
 }
 
-int Sys::break_dimension(int model_parallel_npu_group) {
+int Device::break_dimension(int model_parallel_npu_group) {
   if (model_parallel_npu_group == 1) {
     return -1;
   }
@@ -428,10 +428,10 @@ int Sys::break_dimension(int model_parallel_npu_group) {
   }
   return -1;
 }
-int Sys::get_layer_numbers(std::string workload_input) {
+int Device::get_layer_numbers(std::string workload_input) {
   return Workload::get_layer_numbers(workload_input);
 }
-int Sys::get_priority(SchedulingPolicy pref_scheduling) {
+int Device::get_priority(SchedulingPolicy pref_scheduling) {
   if (pref_scheduling == SchedulingPolicy::None) {
     if (scheduling_policy == SchedulingPolicy::LIFO) {
       return priority_counter++;
@@ -448,7 +448,7 @@ int Sys::get_priority(SchedulingPolicy pref_scheduling) {
     }
   }
 }
-int Sys::rendezvous_sim_send(
+int Device::rendezvous_sim_send(
     Tick delay,
     void* buffer,
     uint64_t count,
@@ -475,11 +475,11 @@ int Sys::rendezvous_sim_send(
       dst,
       newTag,
       &newReq,
-      &Sys::handleEvent,
+      &Device::handleEvent,
       rsd);
   return 1;
 }
-int Sys::sim_send(
+int Device::sim_send(
     Tick delay,
     void* buffer,
     uint64_t count,
@@ -490,7 +490,7 @@ int Sys::sim_send(
     void (*msg_handler)(void* fun_arg),
     void* fun_arg) {
   if (delay == 0 && fun_arg == nullptr) {
-    Sys::sysCriticalSection cs;
+    Device::sysCriticalSection cs;
       
     SendPacketEventHandlerData* fun_arg_tmp =
         new SendPacketEventHandlerData(this, id+npu_offset, dst, tag);
@@ -542,7 +542,7 @@ int Sys::sim_send(
   }
   return 1;
 }
-int Sys::front_end_sim_send(
+int Device::front_end_sim_send(
     Tick delay,
     void* buffer,
     uint64_t count,
@@ -560,7 +560,7 @@ int Sys::front_end_sim_send(
         delay, buffer, count, type, dst, tag, request, msg_handler, fun_arg);
   }
 }
-int Sys::rendezvous_sim_recv(
+int Device::rendezvous_sim_recv(
     Tick delay,
     void* buffer,
     uint64_t count,
@@ -587,11 +587,11 @@ int Sys::rendezvous_sim_recv(
       src,
       newTag,
       &newReq,
-      &Sys::handleEvent,
+      &Device::handleEvent,
       rrd);
   return 1;
 }
-int Sys::sim_recv(
+int Device::sim_recv(
     Tick delay,
     void* buffer,
     uint64_t count,
@@ -621,7 +621,7 @@ int Sys::sim_recv(
   }
   return 1;
 }
-int Sys::front_end_sim_recv(
+int Device::front_end_sim_recv(
     Tick delay,
     void* buffer,
     uint64_t count,
@@ -639,7 +639,7 @@ int Sys::front_end_sim_recv(
         delay, buffer, count, type, src, tag, request, msg_handler, fun_arg);
   }
 }
-Tick Sys::mem_read(uint64_t bytes) {
+Tick Device::mem_read(uint64_t bytes) {
   if (MEM == nullptr) {
     return 10;
   }
@@ -647,7 +647,7 @@ Tick Sys::mem_read(uint64_t bytes) {
   Tick delay_cycles = delay_ns / CLOCK_PERIOD;
   return delay_cycles;
 }
-Tick Sys::mem_write(uint64_t bytes) {
+Tick Device::mem_write(uint64_t bytes) {
   if (MEM == nullptr) {
     return 10;
   }
@@ -655,7 +655,7 @@ Tick Sys::mem_write(uint64_t bytes) {
   Tick delay_cycles = delay_ns / CLOCK_PERIOD;
   return delay_cycles;
 }
-std::string Sys::trim(
+std::string Device::trim(
     const std::string& str,
     const std::string& whitespace = " \t") {
   const auto strBegin = str.find_first_not_of(whitespace);
@@ -667,7 +667,7 @@ std::string Sys::trim(
 
   return str.substr(strBegin, strRange);
 }
-std::vector<CollectiveImplementation*> Sys::
+std::vector<CollectiveImplementation*> Device::
     generate_collective_implementation_from_input(std::string input) {
   std::vector<std::string> inputs_per_dimension = split_string(input, "_");
   std::vector<CollectiveImplementation*> result;
@@ -715,7 +715,7 @@ std::vector<CollectiveImplementation*> Sys::
   }
   return result;
 }
-bool Sys::parse_var(std::string var, std::string value) {
+bool Device::parse_var(std::string var, std::string value) {
   var = trim(var);
   value = trim(value);
   if (id == 0) {
@@ -820,7 +820,7 @@ bool Sys::parse_var(std::string var, std::string value) {
   }
   return true;
 }
-bool Sys::post_process_inputs() {
+bool Device::post_process_inputs() {
   all_reduce_implementation_per_dimension =
       generate_collective_implementation_from_input(
           inp_all_reduce_implementation);
@@ -873,7 +873,7 @@ bool Sys::post_process_inputs() {
   }
   return true;
 }
-bool Sys::initialize_sys(std::string name) {
+bool Device::initialize_sys(std::string name) {
   std::ifstream inFile;
   inFile.open(name);
   if (!inFile) {
@@ -908,8 +908,8 @@ bool Sys::initialize_sys(std::string name) {
   inFile.close();
   return post_process_inputs();
 }
-Sys::SchedulerUnit::SchedulerUnit(
-    Sys* sys,
+Device::SchedulerUnit::SchedulerUnit(
+    Device* sys,
     std::vector<int> queues,
     int max_running_streams,
     int ready_list_threshold,
@@ -938,7 +938,7 @@ Sys::SchedulerUnit::SchedulerUnit(
     usage.push_back(u);
   }
 }
-void Sys::SchedulerUnit::notify_stream_added_into_ready_list() {
+void Device::SchedulerUnit::notify_stream_added_into_ready_list() {
   if (this->sys->first_phase_streams < ready_list_threshold &&
       this->sys->total_running_streams < max_running_streams) {
     int max = ready_list_threshold - sys->first_phase_streams;
@@ -949,7 +949,7 @@ void Sys::SchedulerUnit::notify_stream_added_into_ready_list() {
   }
   return;
 }
-void Sys::SchedulerUnit::notify_stream_added(int vnet) {
+void Device::SchedulerUnit::notify_stream_added(int vnet) {
   if (sys->id == 0 &&
       ++total_active_chunks_per_dimension[queue_id_to_dimension[vnet]] == 1) {
     usage[queue_id_to_dimension[vnet]].increase_usage();
@@ -963,9 +963,9 @@ void Sys::SchedulerUnit::notify_stream_added(int vnet) {
     std::advance(stream_pointer[vnet], 1);
   }
   MockNcclLog* NcclLog = MockNcclLog::getInstance();
-  NcclLog->writeLog(NcclLogLevel::DEBUG,"Sys::SchedulerUnit::notify_stream_added finished");
+  NcclLog->writeLog(NcclLogLevel::DEBUG,"Device::SchedulerUnit::notify_stream_added finished");
 }
-void Sys::SchedulerUnit::notify_stream_removed(int vnet, Tick running_time) {
+void Device::SchedulerUnit::notify_stream_removed(int vnet, Tick running_time) {
   if (sys->id == 0 &&
       --total_active_chunks_per_dimension[queue_id_to_dimension[vnet]] == 0) {
     usage[queue_id_to_dimension[vnet]].decrease_usage();
@@ -993,7 +993,7 @@ void Sys::SchedulerUnit::notify_stream_removed(int vnet, Tick running_time) {
     std::advance(stream_pointer[vnet], 1);
   }
 }
-std::vector<double> Sys::SchedulerUnit::get_average_latency_per_dimension() {
+std::vector<double> Device::SchedulerUnit::get_average_latency_per_dimension() {
   std::vector<double> result;
   result.resize(latency_per_dimension.size(), -1);
   for (int i = 0; i < result.size(); i++) {
@@ -1001,7 +1001,7 @@ std::vector<double> Sys::SchedulerUnit::get_average_latency_per_dimension() {
   }
   return result;
 }
-int Sys::nextPowerOf2(int n) {
+int Device::nextPowerOf2(int n) {
   int count = 0;
   if (n && !(n & (n - 1)))
     return n;
@@ -1011,14 +1011,14 @@ int Sys::nextPowerOf2(int n) {
   }
   return 1 << count;
 }
-void Sys::sys_panic(std::string msg) {
+void Device::sys_panic(std::string msg) {
   std::cerr << msg << std::endl;
   exit(1);
 }
-void Sys::iterate() {
+void Device::iterate() {
   call_events();
 }
-std::vector<std::string> Sys::split_string(std::string str, std::string sep) {
+std::vector<std::string> Device::split_string(std::string str, std::string sep) {
   char* cstr = const_cast<char*>(str.c_str());
   char* current;
   std::vector<std::string> arr;
@@ -1029,11 +1029,11 @@ std::vector<std::string> Sys::split_string(std::string str, std::string sep) {
   }
   return arr;
 }
-uint64_t Sys::determine_chunk_size(uint64_t size, ComType type) {
+uint64_t Device::determine_chunk_size(uint64_t size, ComType type) {
   uint64_t chunk_size = size / preferred_dataset_splits;
   return chunk_size;
 }
-DataSet* Sys::generate_all_reduce(
+DataSet* Device::generate_all_reduce(
     uint64_t size,
     std::vector<bool> involved_dimensions,
     SchedulingPolicy pref_scheduling,
@@ -1051,7 +1051,7 @@ DataSet* Sys::generate_all_reduce(
       event,
       layer_ptr);
 }
-DataSet* Sys::generate_all_gather(
+DataSet* Device::generate_all_gather(
     uint64_t size,
     std::vector<bool> involved_dimensions,
     SchedulingPolicy pref_scheduling,
@@ -1069,7 +1069,7 @@ DataSet* Sys::generate_all_gather(
       event,
       layer_ptr);
 }
-DataSet* Sys::generate_reduce_scatter(
+DataSet* Device::generate_reduce_scatter(
     uint64_t size,
     std::vector<bool> involved_dimensions,
     SchedulingPolicy pref_scheduling,
@@ -1087,7 +1087,7 @@ DataSet* Sys::generate_reduce_scatter(
       event,
       layer_ptr);
 }
-DataSet* Sys::generate_all_to_all(
+DataSet* Device::generate_all_to_all(
     uint64_t size,
     std::vector<bool> involved_dimensions,
     SchedulingPolicy pref_scheduling,
@@ -1105,7 +1105,7 @@ DataSet* Sys::generate_all_to_all(
       event,
       layer_ptr);
 }
-CollectivePhase Sys::generate_collective_phase(
+CollectivePhase Device::generate_collective_phase(
     ComType collective_type,
     int layer_num,
     BasicLogicalTopology* topology,
@@ -1191,7 +1191,7 @@ CollectivePhase Sys::generate_collective_phase(
               MockNccl::ncclInfo *nccl_info;
               std::shared_ptr<void> ptr_FlowModels;
               {
-                Sys::sysCriticalSection cs;
+                Device::sysCriticalSection cs;
                 nccl_info = get_nccl_Info(comm_ps,data_size,collective_type);
                 ptr_FlowModels = generate_flow_model(comm_ps, data_size, collective_type); 
                 cs.ExitSection();
@@ -1201,7 +1201,7 @@ CollectivePhase Sys::generate_collective_phase(
                 std::shared_ptr<MockNccl::FlowModels> RingFlowModels = std::static_pointer_cast<MockNccl::FlowModels>(ptr_FlowModels);
                 std::map<int,std::map<int,std::vector<int>>> channels;
                 {
-                  Sys::sysCriticalSection cs;
+                  Device::sysCriticalSection cs;
                   channels = mock_nccl_comms[comm_ps]->get_rings();
                   cs.ExitSection();
                 }
@@ -1249,7 +1249,7 @@ CollectivePhase Sys::generate_collective_phase(
                 std::shared_ptr<MockNccl::FlowModels> TreeFlowModels;
                 MockNccl::TreeChannels treechannels;
                 {
-                  Sys::sysCriticalSection cs;
+                  Device::sysCriticalSection cs;
                   TreeFlowModels = std::static_pointer_cast<MockNccl::FlowModels>(ptr_FlowModels);
                   treechannels = mock_nccl_comms[comm_ps]->get_treechannels();
                   cs.ExitSection();
@@ -1275,7 +1275,7 @@ CollectivePhase Sys::generate_collective_phase(
                 std::shared_ptr<MockNccl::FlowModels> RingFlowModels = std::static_pointer_cast<MockNccl::FlowModels>(ptr_FlowModels);
                 MockNccl::TreeChannels treechannels;
                 {
-                  Sys::sysCriticalSection cs;
+                  Device::sysCriticalSection cs;
                   treechannels = mock_nccl_comms[comm_ps]->get_treechannels();
                   cs.ExitSection();
                 }
@@ -1329,7 +1329,7 @@ CollectivePhase Sys::generate_collective_phase(
           }
 }
 
-std::map<std::pair<int,int>, MockNccl::SingleFlow> Sys:: generate_net_test_flow_model(uint64_t data_size, int nums) {
+std::map<std::pair<int,int>, MockNccl::SingleFlow> Device:: generate_net_test_flow_model(uint64_t data_size, int nums) {
   std::map<std::pair<int,int>, MockNccl::SingleFlow> result;
   MockNccl::SingleFlow tmp;
   for (int i = 0; i < nums; i++) {
@@ -1345,7 +1345,7 @@ std::map<std::pair<int,int>, MockNccl::SingleFlow> Sys:: generate_net_test_flow_
   return result;
 }
 
-std::map<std::pair<int,int>, MockNccl::SingleFlow> Sys::generate_nvl_test_flow_model(uint64_t data_size, int nums) {
+std::map<std::pair<int,int>, MockNccl::SingleFlow> Device::generate_nvl_test_flow_model(uint64_t data_size, int nums) {
   std::map<std::pair<int,int>, MockNccl::SingleFlow> result;
   MockNccl::SingleFlow tmp;
   for (int i = 0; i < nums; i++) {
@@ -1361,7 +1361,7 @@ std::map<std::pair<int,int>, MockNccl::SingleFlow> Sys::generate_nvl_test_flow_m
   return result;
 }
 
-bool Sys::mock_nccl_grobal_group_init(){
+bool Device::mock_nccl_grobal_group_init(){
   if (GlobalGroup != nullptr)
     return true;
   else {
@@ -1378,7 +1378,7 @@ bool Sys::mock_nccl_grobal_group_init(){
   }
 }
 
-bool Sys::mock_nccl_comms_init(){
+bool Device::mock_nccl_comms_init(){
     int TP_size = workload->model_parallel_npu_group == 0
        ? total_nodes
        : workload->model_parallel_npu_group;
@@ -1406,11 +1406,11 @@ bool Sys::mock_nccl_comms_init(){
     return true;
 }
 
-struct MockNccl::ncclInfo* Sys::get_nccl_Info(ParallelStrategy comm_ps, uint64_t data_size, ComType collective_type) {
+struct MockNccl::ncclInfo* Device::get_nccl_Info(ParallelStrategy comm_ps, uint64_t data_size, ComType collective_type) {
     return mock_nccl_comms[comm_ps]->get_algo_proto_info(data_size, collective_type );
 }
 
-std::shared_ptr<void> Sys::generate_flow_model(ParallelStrategy comm_ps, uint64_t data_size, ComType collective_type) {
+std::shared_ptr<void> Device::generate_flow_model(ParallelStrategy comm_ps, uint64_t data_size, ComType collective_type) {
     MockNccl::MockNcclComm* pComm = mock_nccl_comms[comm_ps];
     MockNccl::State current_state;
     switch (this->workload->current_state) {
@@ -1427,7 +1427,7 @@ std::shared_ptr<void> Sys::generate_flow_model(ParallelStrategy comm_ps, uint64_
     return  pComm->get_flow_model(data_size,collective_type,this->workload->index,current_state);
 }
 
-DataSet* Sys::generate_collective(
+DataSet* Device::generate_collective(
     uint64_t size,
     int layer_num,
     LogicalTopology* topology,
@@ -1454,9 +1454,9 @@ DataSet* Sys::generate_collective(
       (inter_dimension_scheduling == InterDimensionScheduling::OfflineGreedy ||
        inter_dimension_scheduling ==
            InterDimensionScheduling::OfflineGreedyFlex)) {
-    if (last_scheduled_collective != Sys::boostedTick()) {
+    if (last_scheduled_collective != Device::boostedTick()) {
       offline_greedy->reset_loads();
-      last_scheduled_collective = Sys::boostedTick();
+      last_scheduled_collective = Device::boostedTick();
     }
   }
 
@@ -1663,7 +1663,7 @@ DataSet* Sys::generate_collective(
       #endif//在这里进行了try register
       insert_into_ready_list(newStream);
       MockNcclLog* NcclLog = MockNcclLog::getInstance();
-      NcclLog->writeLog(NcclLogLevel::DEBUG,"Sys::generate_collective finished");
+      NcclLog->writeLog(NcclLogLevel::DEBUG,"Device::generate_collective finished");
     } else {
       dataset->active = false;
       break;
@@ -1675,11 +1675,11 @@ DataSet* Sys::generate_collective(
   }
   return dataset;
 }
-void Sys::call_events() {
-  if(event_queue.find(Sys::boostedTick())==event_queue.end()){
+void Device::call_events() {
+  if(event_queue.find(Device::boostedTick())==event_queue.end()){
     goto FINISH_CHECK;
   }
-  for (auto& callable : event_queue[Sys::boostedTick()]) {
+  for (auto& callable : event_queue[Device::boostedTick()]) {
     try {
       pending_events--;
       (std::get<0>(callable))
@@ -1689,11 +1689,11 @@ void Sys::call_events() {
     }
   }
   {
-  Sys::sysCriticalSection cs;
-  if (event_queue[Sys::boostedTick()].size() > 0) {
-    event_queue[Sys::boostedTick()].clear();
+  Device::sysCriticalSection cs;
+  if (event_queue[Device::boostedTick()].size() > 0) {
+    event_queue[Device::boostedTick()].clear();
   }
-  event_queue.erase(Sys::boostedTick());
+  event_queue.erase(Device::boostedTick());
   cs.ExitSection();
   }
   FINISH_CHECK: if ((finished_workloads == 1 && event_queue.size() == 0 && pending_sends.size() == 0) ||
@@ -1702,15 +1702,15 @@ void Sys::call_events() {
   }
 
 }
-void Sys::exitSimLoop(std::string msg) {
+void Device::exitSimLoop(std::string msg) {
   if(id == 0 ){
   std::cout << msg << std::endl;
   }
   NI->sim_finish();
   return;
 }
-Tick Sys::boostedTick() {
-  Sys* ts = all_generators[0];
+Tick Device::boostedTick() {
+  Device* ts = all_generators[0];
   if (ts == nullptr) {
     for (int i = 1; i < all_generators.size(); i++) {
       if (all_generators[i] != nullptr) {
@@ -1723,7 +1723,7 @@ Tick Sys::boostedTick() {
   Tick tick = tmp.time_val / CLOCK_PERIOD;
   return tick + offset;
 }
-void Sys::proceed_to_next_vnet_baseline(StreamBaseline* stream) {
+void Device::proceed_to_next_vnet_baseline(StreamBaseline* stream) {
   MockNcclLog* NcclLog = MockNcclLog::getInstance();
   NcclLog->writeLog(NcclLogLevel::DEBUG,"proceed_to_next_vnet_baseline :: phase1, stream->current_queue_id %d stream->phases_to_go.size %d",stream->current_queue_id,stream->phases_to_go.size());
   int previous_vnet = stream->current_queue_id;
@@ -1759,7 +1759,7 @@ void Sys::proceed_to_next_vnet_baseline(StreamBaseline* stream) {
     if (previous_vnet >= 0) {
       NcclLog->writeLog(NcclLogLevel::DEBUG,"proceed_to_next_vnet_baseline :: phase2-1");
       scheduler_unit->notify_stream_removed(
-          previous_vnet, Sys::boostedTick() - stream->last_init);
+          previous_vnet, Device::boostedTick() - stream->last_init);
     }
     #ifdef PHY_MTP
     running_list.pop_front();
@@ -1779,7 +1779,7 @@ void Sys::proceed_to_next_vnet_baseline(StreamBaseline* stream) {
   stream->test = 0;
   stream->test2 = 0;
   stream->initialized = false;
-  stream->last_phase_change = Sys::boostedTick();
+  stream->last_phase_change = Device::boostedTick();
   stream->total_packets_sent = 0;
 
   stream->net_message_latency.push_back(0);
@@ -1795,7 +1795,7 @@ void Sys::proceed_to_next_vnet_baseline(StreamBaseline* stream) {
 
   if (previous_vnet >= 0) {
     scheduler_unit->notify_stream_removed(
-        previous_vnet, Sys::boostedTick() - stream->last_init);
+        previous_vnet, Device::boostedTick() - stream->last_init);
   }
   #ifdef PHY_MTP
   ready_list.pop_front();
@@ -1807,8 +1807,8 @@ void Sys::proceed_to_next_vnet_baseline(StreamBaseline* stream) {
 
   NcclLog->writeLog(NcclLogLevel::DEBUG,"proceed_to_next_vnet_baseline :: exit");
 }
-void Sys::exiting() {}
-void Sys::insert_stream(std::list<BaseStream*>* queue, BaseStream* baseStream) {
+void Device::exiting() {}
+void Device::insert_stream(std::list<BaseStream*>* queue, BaseStream* baseStream) {
   std::list<BaseStream*>::iterator it = queue->begin();
   if (intra_dimension_scheduling == IntraDimensionScheduling::FIFO ||
       baseStream->current_queue_id < 0 ||
@@ -1885,17 +1885,17 @@ void Sys::insert_stream(std::list<BaseStream*>* queue, BaseStream* baseStream) {
   }
   queue->insert(it, baseStream);
 }
-void Sys::register_for_finished_stream(Callable* callable) {
+void Device::register_for_finished_stream(Callable* callable) {
   registered_for_finished_stream_event.push_back(callable);
 }
-void Sys::increase_finished_streams(int amount) {
+void Device::increase_finished_streams(int amount) {
   streams_finished += amount;
   for (auto c : registered_for_finished_stream_event) {
     c->call(EventType::StreamsFinishedIncrease, nullptr);
   }
 }
 
-void Sys::register_phases(
+void Device::register_phases(
     BaseStream* stream,
     std::list<CollectivePhase> phases_to_go) {
   for (auto& vnet : phases_to_go) {
@@ -1903,7 +1903,7 @@ void Sys::register_phases(
   }
 }
 
-void Sys::zero_latecy_register_event(
+void Device::zero_latecy_register_event(
       Callable* callable,
       EventType event,
       CallData* callData,
@@ -1912,17 +1912,17 @@ void Sys::zero_latecy_register_event(
   bool should_schedule = false;
   {
     #ifdef NS3_MTP
-    Sys::sysCriticalSection cs;
+    Device::sysCriticalSection cs;
     #endif
     #ifdef PHY_MTP
-    Sys::sysCriticalSection cs;
+    Device::sysCriticalSection cs;
     #endif
-    if (event_queue.find(Sys::boostedTick() + mycycles) == event_queue.end()) {
+    if (event_queue.find(Device::boostedTick() + mycycles) == event_queue.end()) {
       std::list<std::tuple<Callable*, EventType, CallData*>> tmp;
-      event_queue[Sys::boostedTick() + mycycles] = tmp;
+      event_queue[Device::boostedTick() + mycycles] = tmp;
       should_schedule = true;
     }
-    event_queue[Sys::boostedTick() + mycycles].push_back(
+    event_queue[Device::boostedTick() + mycycles].push_back(
         std::make_tuple(callable, event, callData));
     #ifdef NS3_MTP
     cs.ExitSection();
@@ -1940,7 +1940,7 @@ void Sys::zero_latecy_register_event(
   }
 }
 
-void Sys::register_event(
+void Device::register_event(
     Callable* callable,
     EventType event,
     CallData* callData,
@@ -1949,12 +1949,12 @@ void Sys::register_event(
   try_register_event(callable, event, callData, mycycles);
   return;
 }
-void Sys::call(EventType type, CallData* data) {
+void Device::call(EventType type, CallData* data) {
   if (id == 0 && type == EventType::General) {
     increase_finished_streams(1);
   }
 }
-void Sys::try_register_event(
+void Device::try_register_event(
     Callable* callable,
     EventType event,
     CallData* callData,
@@ -1965,19 +1965,27 @@ void Sys::try_register_event(
     NcclLog->writeLog(
         NcclLogLevel::DEBUG, "try_register_event EventType %d ", event);
     #ifdef NS3_MTP
-        Sys::sysCriticalSection cs;
+        Device::sysCriticalSection cs;
     #endif
-    if (event_queue.find(Sys::boostedTick() + cycles) == event_queue.end()) {
+    if (event_queue.find(Device::boostedTick() + cycles) == event_queue.end()) {
       std::list<std::tuple<Callable*, EventType, CallData*>> tmp;
-      event_queue[Sys::boostedTick() + cycles] = tmp;
+      event_queue[Device::boostedTick() + cycles] = tmp;
       should_schedule = true;
     }
     recorded_event_types.push_back(event);
     // if (id == 0)
     // {
-    //   print_recorded_event_types();
+    //   std::cout << "  Event Type: " << event << std::endl;
+    //   static std::ofstream log_file("device0_events.log");
+      
+    //   if (log_file.is_open()) {
+    //     printf("write log\n");
+    //     log_file << "Event Type: " << event << std::endl;
+    //     // 可选：立即刷新到磁盘
+    //     // log_file.flush(); 
+    //   }
     // }
-    event_queue[Sys::boostedTick() + cycles].push_back(
+    event_queue[Device::boostedTick() + cycles].push_back(
         std::make_tuple(callable, event, callData));
     #ifdef NS3_MTP
     cs.ExitSection();
@@ -1987,23 +1995,23 @@ void Sys::try_register_event(
     timespec_t tmp = generate_time(cycles);
     BasicEventHandlerData* data =
         new BasicEventHandlerData(this, EventType::CallEvents);
-    NI->sim_schedule(tmp, &Sys::handleEvent, data);
+    NI->sim_schedule(tmp, &Device::handleEvent, data);
   }
   cycles = 0;
   pending_events++;
   return;
 }
 #ifdef PHY_MTP
-void Sys::insert_into_running_list(StreamBaseline* stream) {
+void Device::insert_into_running_list(StreamBaseline* stream) {
   running_list.push_back(stream);
 }
 #endif
 
-void Sys::insert_into_ready_list(BaseStream* stream) {
+void Device::insert_into_ready_list(BaseStream* stream) {
   insert_stream(&ready_list, stream);
   scheduler_unit->notify_stream_added_into_ready_list();
 }
-void Sys::schedule(int num) {
+void Device::schedule(int num) {
   MockNcclLog* NcclLog = MockNcclLog::getInstance();
   int ready_list_size = ready_list.size();
   int counter = std::min(num, ready_list_size);
@@ -2017,7 +2025,7 @@ void Sys::schedule(int num) {
 
     #ifndef PHY_MTP
     if (ready_list.front()->current_queue_id == -1) {
-      Sys::sys_panic(
+      Device::sys_panic(
           "should not happen! " 
           );
     }
@@ -2027,20 +2035,33 @@ void Sys::schedule(int num) {
     #endif 
     counter--;
   }
-  NcclLog->writeLog(NcclLogLevel::DEBUG,"Sys::shedule finished");
+  NcclLog->writeLog(NcclLogLevel::DEBUG,"Device::shedule finished");
 }
-void Sys::handleEvent(void* arg) {
+void Device::handleEvent(void* arg) {
   if (arg == nullptr) { 
     return;
   }
   BasicEventHandlerData* ehd = (BasicEventHandlerData*)arg;
-  Sys* node = ehd->node;
+  Device* node = ehd->node;
   EventType event = ehd->event;
   MockNcclLog* NcclLog = MockNcclLog::getInstance();
 
+    // if (true)
+    // {
+    //   std::cout << "  ns3 Event Type: " << event << std::endl;
+    //   static std::ofstream log_file("device0_ns3events.log");
+      
+    //   if (log_file.is_open()) {
+    //     printf("write log\n");
+    //     log_file << "Event Type: " << event << std::endl;
+    //     // 可选：立即刷新到磁盘
+    //     // log_file.flush(); 
+    //   }
+    // }
+
 
   if (event == EventType::CallEvents) {
-    NcclLog->writeLog(NcclLogLevel::DEBUG," Sys::handleEvent EventType::CallEvents");
+    NcclLog->writeLog(NcclLogLevel::DEBUG," Device::handleEvent EventType::CallEvents");
     node->iterate();
     delete ehd;
   } else if (event == EventType::RendezvousSend) {
@@ -2060,10 +2081,10 @@ void Sys::handleEvent(void* arg) {
     SendPacketEventHandlerData* sendhd = (SendPacketEventHandlerData*)ehd;
     NcclLog->writeLog(NcclLogLevel::DEBUG,"packet sent, sender id:  %d, node id:  %d",sendhd->senderNodeId,node->id);
     #ifdef NS3_MTP
-    Sys::sysCriticalSection cs;
+    Device::sysCriticalSection cs;
     #endif
     #ifdef PHY_MTP
-    Sys::sysCriticalSection cs;
+    Device::sysCriticalSection cs;
     #endif
     if(all_generators[sendhd->senderNodeId]== nullptr){
       #ifdef NS3_MTP
@@ -2084,7 +2105,7 @@ void Sys::handleEvent(void* arg) {
       node->is_there_pending_sends[std::make_pair(
           sendhd->receiverNodeId, sendhd->tag)] = false;
       
-      if(node->event_queue.find(Sys::boostedTick())==node->event_queue.end())
+      if(node->event_queue.find(Device::boostedTick())==node->event_queue.end())
         if ((node->finished_workloads == 1 && node->event_queue.size() == 0 && node->pending_sends.size() == 0) ||
       node->initialized == false) {
         delete node;
@@ -2121,14 +2142,14 @@ void Sys::handleEvent(void* arg) {
   }
 }
 
-AstraSim::timespec_t Sys::generate_time(int cycles) {
+AstraSim::timespec_t Device::generate_time(int cycles) {
   timespec_t tmp = NI->sim_get_time();
   double addition = cycles * ((double)CLOCK_PERIOD);
   tmp.time_val = addition;
   return tmp;
 }
 
-void Sys::print_recorded_event_types()  {
+void Device::print_recorded_event_types()  {
     std::cout << "Recorded Event Types:" << std::endl;
     for (const auto& event_type : recorded_event_types) {
         std::cout << "  Event Type: " << event_type << std::endl;

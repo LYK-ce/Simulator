@@ -15,7 +15,7 @@ public:
     NCCL_Event(const std::string& name);
 
     // 覆盖基类默认实现
-    void process(Sys* generator, Workload_StateMachine* workload) override;
+    void process(Device* generator, Workload_StateMachine* workload) override;
 };
 
 } // namespace AstraSim

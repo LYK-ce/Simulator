@@ -10,7 +10,7 @@ NCCL_Event::NCCL_Event(const std::string& name)
     // 链表字段 next 由基类默认构造初始化为 nullptr
 }
 
-void NCCL_Event::process(Sys* generator, Workload_StateMachine* workload)
+void NCCL_Event::process(Device* generator, Workload_StateMachine* workload)
 {
     std::cout << "[NCCL_Event] "
               << name

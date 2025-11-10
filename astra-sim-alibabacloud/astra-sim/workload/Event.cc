@@ -20,7 +20,7 @@ namespace AstraSim {
 
     // 默认的Iterate函数实现，自定义的事件应该覆盖此函数
     // 目前默认行为将随机生成一个数值，然后将事件插入到事件列表当中。
-    void AstraSim ::Event:: process(Sys* generator, Workload_StateMachine* workload)
+    void AstraSim ::Event:: process(Device* generator, Workload_StateMachine* workload)
     {
         //
         std::cout << "Warning: Default process() called for event [" << name << "]"

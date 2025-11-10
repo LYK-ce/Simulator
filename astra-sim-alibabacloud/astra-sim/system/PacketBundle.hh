@@ -25,21 +25,21 @@ LICENSE file in the root directory of this source tree.
 #include "MyPacket.hh"
 
 namespace AstraSim {
-class Sys;
+class Device;
 class PacketBundle : public Callable {
  public:
   std::list<MyPacket*> locked_packets;
   bool needs_processing;
   bool send_back;
   uint64_t size;
-  Sys* generator;
+  Device* generator;
   BaseStream* stream;
   Tick creation_time;
   MemBus::Transmition transmition;
   int channel_id;
   int flow_id;
   PacketBundle(
-      Sys* generator,
+      Device* generator,
       BaseStream* stream,
       std::list<MyPacket*> locked_packets,
       bool needs_processing,
@@ -49,7 +49,7 @@ class PacketBundle : public Callable {
       int channel_id,
       int flow_id);
   PacketBundle(
-      Sys* generator,
+      Device* generator,
       BaseStream* stream,
       std::list<MyPacket*> locked_packets,
       bool needs_processing,
@@ -57,7 +57,7 @@ class PacketBundle : public Callable {
       uint64_t size,
       MemBus::Transmition transmition);
   PacketBundle(
-      Sys* generator,
+      Device* generator,
       BaseStream* stream,
       bool needs_processing,
       bool send_back,

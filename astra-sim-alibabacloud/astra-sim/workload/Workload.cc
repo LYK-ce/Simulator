@@ -29,7 +29,7 @@ Workload::~Workload() {
 }
 Workload::Workload(
     std::string run_name,
-    Sys* generator,
+    Device* generator,
     std::string name,
     int TOTAL_PASS,
     int total_rows,
@@ -86,7 +86,7 @@ void Workload::initialize_stat_files() {
   end_to_end->initialize_csv(SIZE * total_rows + 20, 50);
 }
 void Workload::call(EventType event, CallData* data) {
-  printf("workload::call event type: %d, id: %d, time: %lu \n", event, generator->id, Sys::boostedTick());
+  // printf("workload::call event type: %d, id: %d, time: %lu \n", event, generator->id, Device::boostedTick());
   // AstraSim::Event myevent("MyEvent", 10);
   // myevent.Iterate();
   if (counter > 0) {
@@ -118,7 +118,7 @@ void Workload::call(EventType event, CallData* data) {
   } else if (parallelismPolicy == ParallelismPolicy::HybridCustomized) {
     iterate_hybrid_parallel_customized();
   } else {
-    Sys::sys_panic("No known parallelism!");
+    Device::sys_panic("No known parallelism!");
   }
 }
 void Workload::report() {
@@ -136,7 +136,7 @@ void Workload::report() {
   std::vector<double> total_ig_time = {0, 0, 0};
   AstraSimDataAPI astraSimDataAPI;
   astraSimDataAPI.run_name = run_name;
-  astraSimDataAPI.workload_finished_time = ((double)Sys::boostedTick()) / FREQ;
+  astraSimDataAPI.workload_finished_time = ((double)Device::boostedTick()) / FREQ;
   std::cout<<"workload stats for the job scheduled at NPU offset: "
             <<generator->npu_offset<<std::endl;
   for (int i = 0; i < SIZE; i++) {
@@ -186,7 +186,7 @@ void Workload::report() {
     latency /= FREQ;
   }
   std::cout << "*************************" << std::endl;
-  std::cout << "all passes finished at time: " << Sys::boostedTick()
+  std::cout << "all passes finished at time: " << Device::boostedTick()
             << ", id of first layer: " << layers[0]->id << std::endl;
   generator->NI->pass_front_end_report(astraSimDataAPI);
   #ifdef NS3_MTP 
@@ -284,7 +284,7 @@ void Workload::iterate_data_parallel() {
     if (index == 0) {
       if (generator->id == 0) {
         std::cout << "pass: " << pass_counter
-                  << " finished at time: " << Sys::boostedTick() << std::endl;
+                  << " finished at time: " << Device::boostedTick() << std::endl;
       }
       pass_counter++;
       current_state = LoopState::Forward_Pass;
@@ -369,7 +369,7 @@ void Workload::iterate_hybrid_parallel_customized() {
       index = 0;
       if (generator->id == 0) {
         std::cout << "pass: " << pass_counter
-                  << " finished at time: " << Sys::boostedTick() << std::endl;
+                  << " finished at time: " << Device::boostedTick() << std::endl;
       }
       pass_counter++;
       current_state = LoopState::Forward_Pass;
@@ -459,7 +459,7 @@ void Workload::iterate_hybrid_parallel_data_model() {
       index = 0;
       if (generator->id == 0) {
         std::cout << "pass: " << pass_counter
-                  << " finished at time: " << Sys::boostedTick() << std::endl;
+                  << " finished at time: " << Device::boostedTick() << std::endl;
       }
       pass_counter++;
       current_state = LoopState::Forward_Pass;
@@ -549,7 +549,7 @@ void Workload::iterate_hybrid_parallel_model_data() {
       index = 0;
       if (generator->id == 0) {
         std::cout << "pass: " << pass_counter
-                  << " finished at time: " << Sys::boostedTick() << std::endl;
+                  << " finished at time: " << Device::boostedTick() << std::endl;
       }
       pass_counter++;
       current_state = LoopState::Forward_Pass;
@@ -669,7 +669,7 @@ void Workload::iterate_model_parallel() {
       index = 0;
       if (generator->id == 0) {
         std::cout << "pass: " << pass_counter
-                  << " finished at time: " << Sys::boostedTick() << std::endl;
+                  << " finished at time: " << Device::boostedTick() << std::endl;
       }
       pass_counter++;
       current_state = LoopState::Forward_Pass;
@@ -760,7 +760,7 @@ void Workload::iterate_hybrid_parallel_Transformer() {
       index = 0;
       if (generator->id == 0) {
         std::cout << "pass: " << pass_counter
-                  << " finished at time: " << Sys::boostedTick() << std::endl;
+                  << " finished at time: " << Device::boostedTick() << std::endl;
       }
       pass_counter++;
       current_state = LoopState::Forward_Pass;
@@ -856,7 +856,7 @@ void Workload::iterate_hybrid_parallel_Transformer_fwd_in_bckwd() {
       index = 0;
       if (generator->id == 0) {
         std::cout << "pass: " << pass_counter
-                  << " finished at time: " << Sys::boostedTick() << std::endl;
+                  << " finished at time: " << Device::boostedTick() << std::endl;
       }
       pass_counter++;
       current_state = LoopState::Forward_Pass;
@@ -877,7 +877,7 @@ void Workload::iterate_hybrid_parallel_Transformer_fwd_in_bckwd() {
       if (generator->id == 0) {
         std::cout << "***** info, initiating fwd_in_bkwd starting from layer:"
                   << index << " to layer: " << tmp
-                  << " ,at time: " << Sys::boostedTick() << std::endl;
+                  << " ,at time: " << Device::boostedTick() << std::endl;
       }
       return;
     }
@@ -994,7 +994,7 @@ void Workload::iterate_hybrid_parallel_DLRM() {
     if (index == 0) {
       if (generator->id == 0) {
         std::cout << "pass: " << pass_counter
-                  << " finished at time: " << Sys::boostedTick() << std::endl;
+                  << " finished at time: " << Device::boostedTick() << std::endl;
       }
       pass_counter++;
       current_state = LoopState::Forward_Pass;

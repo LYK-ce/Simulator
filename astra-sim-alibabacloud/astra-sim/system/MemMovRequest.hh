@@ -23,7 +23,7 @@ LICENSE file in the root directory of this source tree.
 #include "SharedBusStat.hh"
 
 namespace AstraSim {
-class Sys;
+class Device;
 class LogGP;
 class MemMovRequest : public Callable, public SharedBusStat {
  public:
@@ -35,7 +35,7 @@ class MemMovRequest : public Callable, public SharedBusStat {
   bool processed;
   bool send_back;
   bool mem_bus_finished;
-  Sys* generator;
+  Device* generator;
   EventType callEvent = EventType::General;
   LogGP* loggp;
   std::list<MemMovRequest>::iterator pointer;
@@ -49,7 +49,7 @@ class MemMovRequest : public Callable, public SharedBusStat {
   int request_num;
   MemMovRequest(
       int request_num,
-      Sys* generator,
+      Device* generator,
       LogGP* loggp,
       int size,
       int latency,

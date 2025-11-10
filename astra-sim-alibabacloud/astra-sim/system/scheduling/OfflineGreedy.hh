@@ -20,11 +20,11 @@ class DimElapsedTime {
 };
 class OfflineGreedy {
  public:
-  Sys* sys;
+  Device* sys;
   std::vector<DimElapsedTime> dim_elapsed_time;
   std::vector<double> dim_BW;
   std::vector<int> dim_size;
-  OfflineGreedy(Sys* sys);
+  OfflineGreedy(Device* sys);
   void reset_loads();
   std::vector<int> get_chunk_scheduling(
       long long chunk_id,

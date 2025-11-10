@@ -13,7 +13,7 @@ LogGP::~LogGP() {
 }
 LogGP::LogGP(
     std::string name,
-    Sys* generator,
+    Device* generator,
     Tick L,
     Tick o,
     Tick g,
@@ -38,7 +38,7 @@ LogGP::LogGP(
 
 }
 void LogGP::attach_mem_bus(
-    Sys* generator,
+    Device* generator,
     Tick L,
     Tick o,
     Tick g,
@@ -60,17 +60,17 @@ void LogGP::attach_mem_bus(
 void LogGP::process_next_read() {
   Tick offset = 0;
   if (prevState == State::Sending) {
-    assert(Sys::boostedTick() >= last_trans);
-    if ((o + (Sys::boostedTick() - last_trans)) > g) {
+    assert(Device::boostedTick() >= last_trans);
+    if ((o + (Device::boostedTick() - last_trans)) > g) {
       offset = o;
     } else {
-      offset = g - (Sys::boostedTick() - last_trans);
+      offset = g - (Device::boostedTick() - last_trans);
     }
   } else {
     offset = o;
   }
   MemMovRequest tmp = sends.front();
-  tmp.total_transfer_queue_time += Sys::boostedTick() - tmp.start_time;
+  tmp.total_transfer_queue_time += Device::boostedTick() - tmp.start_time;
   partner->switch_to_receiver(tmp, offset);
   sends.pop_front();
   curState = State::Sending;
@@ -105,7 +105,7 @@ void LogGP::request_read(
   }
 }
 void LogGP::switch_to_receiver(MemMovRequest mr, Tick offset) {
-  mr.start_time = Sys::boostedTick();
+  mr.start_time = Device::boostedTick();
   receives.push_back(mr);
   prevState = curState;
   curState = State::Receiving;
@@ -118,16 +118,16 @@ void LogGP::switch_to_receiver(MemMovRequest mr, Tick offset) {
 }
 void LogGP::call(EventType event, CallData* data) {
   if (event == EventType::Send_Finished) {
-    last_trans = Sys::boostedTick();
+    last_trans = Device::boostedTick();
     prevState = curState;
     curState = State::Free;
     subsequent_reads++;
   } else if (event == EventType::Rec_Finished) {
     assert(receives.size() > 0);
     receives.front().total_transfer_time +=
-        Sys::boostedTick() - receives.front().start_time;
-    receives.front().start_time = Sys::boostedTick();
-    last_trans = Sys::boostedTick();
+        Device::boostedTick() - receives.front().start_time;
+    receives.front().start_time = Device::boostedTick();
+    last_trans = Device::boostedTick();
     prevState = curState;
     if (receives.size() < 2) {
       curState = State::Free;
@@ -153,8 +153,8 @@ void LogGP::call(EventType event, CallData* data) {
       }
       if (processing_state == ProcState::Free && processing.size() > 0) {
         processing.front().total_processing_queue_time +=
-            Sys::boostedTick() - processing.front().start_time;
-        processing.front().start_time = Sys::boostedTick();
+            Device::boostedTick() - processing.front().start_time;
+        processing.front().start_time = Device::boostedTick();
         generator->register_event(
             this,
             EventType::Processing_Finished,
@@ -209,8 +209,8 @@ void LogGP::call(EventType event, CallData* data) {
   } else if (event == EventType::Processing_Finished) {
     assert(processing.size() > 0);
     processing.front().total_processing_time +=
-        Sys::boostedTick() - processing.front().start_time;
-    processing.front().start_time = Sys::boostedTick();
+        Device::boostedTick() - processing.front().start_time;
+    processing.front().start_time = Device::boostedTick();
     processing_state = ProcState::Free;
     if (processing.front().send_back == true) {
       if (NPU_MEM != nullptr) {
@@ -258,8 +258,8 @@ void LogGP::call(EventType event, CallData* data) {
     }
     if (processing.size() > 0) {
       processing.front().total_processing_queue_time +=
-          Sys::boostedTick() - processing.front().start_time;
-      processing.front().start_time = Sys::boostedTick();
+          Device::boostedTick() - processing.front().start_time;
+      processing.front().start_time = Device::boostedTick();
       processing_state = ProcState::Processing;
       generator->register_event(
           this,
@@ -285,8 +285,8 @@ void LogGP::call(EventType event, CallData* data) {
     pre_process.erase(talking_it);
     if (processing_state == ProcState::Free && processing.size() > 0) {
       processing.front().total_processing_queue_time +=
-          Sys::boostedTick() - processing.front().start_time;
-      processing.front().start_time = Sys::boostedTick();
+          Device::boostedTick() - processing.front().start_time;
+      processing.front().start_time = Device::boostedTick();
       generator->register_event(
           this,
           EventType::Processing_Finished,

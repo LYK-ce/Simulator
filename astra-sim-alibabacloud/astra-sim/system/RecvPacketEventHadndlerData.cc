@@ -16,7 +16,7 @@ RecvPacketEventHadndlerData::RecvPacketEventHadndlerData(
   this->vnet = vnet;
   this->stream_num = stream_num;
   this->message_end = true;
-  ready_time = Sys::boostedTick();
+  ready_time = Device::boostedTick();
   flow_id = -2;
   child_flow_id = -1;
 }

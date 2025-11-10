@@ -28,7 +28,7 @@ using namespace std;
 
 extern FlowPhyRdma flow_rdma;
 
-AstraSim::Sys* global_sys = nullptr;
+AstraSim::Device* global_sys = nullptr;
 
 static void 
 notify_receiver_receive_data(int sender_node, int receiver_node,

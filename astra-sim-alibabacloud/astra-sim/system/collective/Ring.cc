@@ -220,12 +220,12 @@ void Ring::insert_packet(Callable* sender) {
       send_back = true;
     }
     NPU_to_MA = false;
-    std::cout << "id: " << id << " non-zero latency packets at tick: " << Sys::boostedTick() << std::endl;
+    std::cout << "id: " << id << " non-zero latency packets at tick: " << Device::boostedTick() << std::endl;
     process_max_count();
     non_zero_latency_packets--;
     return;
   }
-  Sys::sys_panic("should not inject nothing!");
+  Device::sys_panic("should not inject nothing!");
 
 }
 bool Ring::ready() {
@@ -247,13 +247,13 @@ bool Ring::ready() {
   snd_req.layerNum = layer_num;
   stream->owner->front_end_sim_send(
       0,
-      Sys::dummy_data,
+      Device::dummy_data,
       msg_size,
       UINT8,
       packet.preferred_dest,
       stream->stream_num,
       &snd_req,
-      &Sys::handleEvent,
+      &Device::handleEvent,
       nullptr); // stream_num+(packet.preferred_dest*50)
   sim_request rcv_req;
   rcv_req.vnet = this->stream->current_queue_id;
@@ -266,13 +266,13 @@ bool Ring::ready() {
       packet.stream_num);
   stream->owner->front_end_sim_recv(
       0,
-      Sys::dummy_data,
+      Device::dummy_data,
       msg_size,
       UINT8,
       packet.preferred_src,
       stream->stream_num,
       &rcv_req,
-      &Sys::handleEvent,
+      &Device::handleEvent,
       ehd); // stream_num+(owner->id*50)
   reduce();
   return true;

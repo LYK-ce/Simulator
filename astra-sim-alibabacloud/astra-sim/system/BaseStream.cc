@@ -11,7 +11,7 @@ void BaseStream::changeState(StreamState state) {
 }
 BaseStream::BaseStream(
     int stream_num,
-    Sys* owner,
+    Device* owner,
     std::list<CollectivePhase> phases_to_go) {
   this->stream_num = stream_num;
   this->owner = owner;
@@ -24,7 +24,7 @@ BaseStream::BaseStream(
   }
   state = StreamState::Created;
   preferred_scheduling = SchedulingPolicy::None;
-  creation_time = Sys::boostedTick();
+  creation_time = Device::boostedTick();
   total_packets_sent = 0;
   current_queue_id = -1;
   priority = 0;

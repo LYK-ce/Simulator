@@ -10,7 +10,7 @@ namespace AstraSim {
 
     Workload_StateMachine::Workload_StateMachine(
     std::string run_name,
-    Sys* generator,
+    Device* generator,
     std::string name,
     int TOTAL_PASS,
     int total_rows,
@@ -103,7 +103,7 @@ namespace AstraSim {
         //         index = 0;
         //         if (generator->id == 0) {
         //             std::cout << "pass: " << pass_counter
-        //                     << " finished at time: " << Sys::boostedTick() << std::endl;
+        //                     << " finished at time: " << Device::boostedTick() << std::endl;
         //         }
         //         pass_counter++;
         //         current_state = LoopState::Forward_Pass;
@@ -125,7 +125,7 @@ namespace AstraSim {
         //         if (generator->id == 0) {
         //             std::cout << "***** info, initiating fwd_in_bkwd starting from layer:"
         //                     << index << " to layer: " << tmp
-        //                     << " ,at time: " << Sys::boostedTick() << std::endl;
+        //                     << " ,at time: " << Device::boostedTick() << std::endl;
         //         }
         //         return;
         //         }

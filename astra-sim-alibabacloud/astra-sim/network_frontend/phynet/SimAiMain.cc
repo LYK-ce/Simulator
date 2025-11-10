@@ -35,7 +35,7 @@
 using namespace std;
 
 extern int local_rank;
-extern AstraSim::Sys* global_sys;
+extern AstraSim::Device* global_sys;
 extern FlowPhyRdma flow_rdma;
 
 struct user_param {
@@ -138,7 +138,7 @@ int main(int argc,char *argv[]){
   physical_dims[0] += user_param.nvswitch_num;
 
   SimAiPhyNetWork* phy_network = new SimAiPhyNetWork(local_rank);
-  global_sys = new AstraSim::Sys(
+  global_sys = new AstraSim::Device(
     phy_network,
     nullptr,
     local_rank,

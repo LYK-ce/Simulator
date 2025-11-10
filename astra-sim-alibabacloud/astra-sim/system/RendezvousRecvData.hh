@@ -23,13 +23,13 @@ LICENSE file in the root directory of this source tree.
 #include "SimRecvCaller.hh"
 
 namespace AstraSim {
-class Sys;
+class Device;
 class RendezvousRecvData : public BasicEventHandlerData, public MetaData {
  public:
   SimRecvCaller* recv;
   RendezvousRecvData(
       int nodeId,
-      Sys* generator,
+      Device* generator,
       void* buffer,
       uint64_t count,
       int type,

@@ -55,13 +55,13 @@ void DoubleBinaryTreeAllReduce::run(EventType event, CallData* data) {
     snd_req.layerNum = layer_num;
     stream->owner->front_end_sim_send(
         0,
-        Sys::dummy_data,
+        Device::dummy_data,
         data_size,
         UINT8,
         parent,
         stream->stream_num,
         &snd_req,
-        &Sys::handleEvent,
+        &Device::handleEvent,
         nullptr);
     sim_request rcv_req;
     rcv_req.vnet = this->stream->current_queue_id;
@@ -74,13 +74,13 @@ void DoubleBinaryTreeAllReduce::run(EventType event, CallData* data) {
         stream->stream_num);
     stream->owner->front_end_sim_recv(
         0,
-        Sys::dummy_data,
+        Device::dummy_data,
         data_size,
         UINT8,
         parent,
         stream->stream_num,
         &rcv_req,
-        &Sys::handleEvent,
+        &Device::handleEvent,
         ehd);
     state = State::WaitingDataFromParent;
     return;
@@ -116,13 +116,13 @@ void DoubleBinaryTreeAllReduce::run(EventType event, CallData* data) {
         stream->stream_num);
     stream->owner->front_end_sim_recv(
         0,
-        Sys::dummy_data,
+        Device::dummy_data,
         data_size,
         UINT8,
         left_child,
         stream->stream_num,
         &rcv_req,
-        &Sys::handleEvent,
+        &Device::handleEvent,
         ehd);
     sim_request rcv_req2;
     rcv_req2.vnet = this->stream->current_queue_id;
@@ -135,13 +135,13 @@ void DoubleBinaryTreeAllReduce::run(EventType event, CallData* data) {
         stream->stream_num);
     stream->owner->front_end_sim_recv(
         0,
-        Sys::dummy_data,
+        Device::dummy_data,
         data_size,
         UINT8,
         right_child,
         stream->stream_num,
         &rcv_req2,
-        &Sys::handleEvent,
+        &Device::handleEvent,
         ehd2);
     state = State::WaitingForTwoChildData;
     return;
@@ -190,13 +190,13 @@ void DoubleBinaryTreeAllReduce::run(EventType event, CallData* data) {
     snd_req.layerNum = layer_num;
     stream->owner->front_end_sim_send(
         0,
-        Sys::dummy_data,
+        Device::dummy_data,
         data_size,
         UINT8,
         parent,
         stream->stream_num,
         &snd_req,
-        &Sys::handleEvent,
+        &Device::handleEvent,
         nullptr);
     sim_request rcv_req;
     rcv_req.vnet = this->stream->current_queue_id;
@@ -209,13 +209,13 @@ void DoubleBinaryTreeAllReduce::run(EventType event, CallData* data) {
         stream->stream_num);
     stream->owner->front_end_sim_recv(
         0,
-        Sys::dummy_data,
+        Device::dummy_data,
         data_size,
         UINT8,
         parent,
         stream->stream_num,
         &rcv_req,
-        &Sys::handleEvent,
+        &Device::handleEvent,
         ehd);
     state = State::WaitingDataFromParent;
   } else if (
@@ -244,13 +244,13 @@ void DoubleBinaryTreeAllReduce::run(EventType event, CallData* data) {
     snd_req.layerNum = layer_num;
     stream->owner->front_end_sim_send(
         0,
-        Sys::dummy_data,
+        Device::dummy_data,
         data_size,
         UINT8,
         left_child,
         stream->stream_num,
         &snd_req,
-        &Sys::handleEvent,
+        &Device::handleEvent,
         nullptr);
     sim_request snd_req2;
     snd_req2.srcRank = stream->owner->id;
@@ -261,13 +261,13 @@ void DoubleBinaryTreeAllReduce::run(EventType event, CallData* data) {
     snd_req2.layerNum = layer_num;
     stream->owner->front_end_sim_send(
         0,
-        Sys::dummy_data,
+        Device::dummy_data,
         data_size,
         UINT8,
         right_child,
         stream->stream_num,
         &snd_req2,
-        &Sys::handleEvent,
+        &Device::handleEvent,
         nullptr);
     exit();
     return;
@@ -286,13 +286,13 @@ void DoubleBinaryTreeAllReduce::run(EventType event, CallData* data) {
         stream->stream_num);
     stream->owner->front_end_sim_recv(
         0,
-        Sys::dummy_data,
+        Device::dummy_data,
         data_size,
         UINT8,
         only_child_id,
         stream->stream_num,
         &rcv_req,
-        &Sys::handleEvent,
+        &Device::handleEvent,
         ehd);
     state = State::WaitingForOneChildData;
   } else if (
@@ -321,13 +321,13 @@ void DoubleBinaryTreeAllReduce::run(EventType event, CallData* data) {
     snd_req.layerNum = layer_num;
     stream->owner->front_end_sim_send(
         0,
-        Sys::dummy_data,
+        Device::dummy_data,
         data_size,
         UINT8,
         only_child_id,
         stream->stream_num,
         &snd_req,
-        &Sys::handleEvent,
+        &Device::handleEvent,
         nullptr);
     exit();
     return;
