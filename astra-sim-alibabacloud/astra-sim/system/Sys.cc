@@ -1105,6 +1105,8 @@ DataSet* Device::generate_all_to_all(
       event,
       layer_ptr);
 }
+
+
 CollectivePhase Device::generate_collective_phase(
     ComType collective_type,
     int layer_num,
@@ -1123,6 +1125,8 @@ CollectivePhase Device::generate_collective_phase(
             CollectivePhase vn(
                 this,
                 queue_id,
+                
+                // Ring/OneRing → new Ring(...)，使用传入的 RingTopology、方向、注入策略等参数
                 new Ring(
                     collective_type,
                     id,
@@ -1140,6 +1144,8 @@ CollectivePhase Device::generate_collective_phase(
             CollectivePhase vn(
                 this,
                 queue_id,
+                
+                // Direct/OneDirect → new AllToAll(...)，还会读取 DirectCollectiveImplementation 的 direct_collective_window。
                 new AllToAll(
                     collective_type,
                     ((DirectCollectiveImplementation*)collective_implementation)
@@ -1158,6 +1164,8 @@ CollectivePhase Device::generate_collective_phase(
             CollectivePhase vn(
                 this,
                 queue_id,
+
+                // DoubleBinaryTree → new DoubleBinaryTreeAllReduce(...)
                 new DoubleBinaryTreeAllReduce(
                     id, layer_num, (BinaryTree*)topology, data_size, boost_mode));
                 return vn;
@@ -1169,6 +1177,8 @@ CollectivePhase Device::generate_collective_phase(
             CollectivePhase vn(
                 this,
                 queue_id,
+
+                // HalvingDoubling/OneHalvingDoubling → new HalvingDoubling(...)
                 new HalvingDoubling(
                     collective_type,
                     id,
@@ -1177,7 +1187,9 @@ CollectivePhase Device::generate_collective_phase(
                     data_size,
                     boost_mode));
                     return vn;
-          } else if(collective_implementation->type == CollectiveImplementationType::NcclFlowModel) {
+          } else if(collective_implementation->type == CollectiveImplementationType::NcclFlowModel) { 
+              
+              // 若实现类型是 NcclFlowModel，会调用额外的底层流程：
               ParallelStrategy  comm_ps;
               if (workload->current_state == Workload::LoopState::Forward_Pass){
                 comm_ps = static_cast<ParallelStrategy> (workload->layers[workload->index]->fwd_pass_group_type);
@@ -1427,21 +1439,29 @@ std::shared_ptr<void> Device::generate_flow_model(ParallelStrategy comm_ps, uint
     return  pComm->get_flow_model(data_size,collective_type,this->workload->index,current_state);
 }
 
+// 
+// 输入：
+// 输出：一个 DataSet*，里面包含本次通信要注入的 StreamBaseline 流列表。
+
 DataSet* Device::generate_collective(
-    uint64_t size,
-    int layer_num,
-    LogicalTopology* topology,
-    std::vector<CollectiveImplementation*> implementation_per_dimension,
-    std::vector<bool> dimensions_involved,
-    ComType collective_type,
-    SchedulingPolicy pref_scheduling,
+    uint64_t size, // 待交换的总字节数
+    int layer_num, // 当前 layer 编号，供日志和调度排序
+    LogicalTopology* topology, // 描述多维拓扑及其各维基本实现
+    std::vector<CollectiveImplementation*> implementation_per_dimension, // 各维度对应的 CollectiveImplementation* 具体算法
+    std::vector<bool> dimensions_involved, // 标记哪些维度参与本次通信
+    ComType collective_type, // 如 All-Reduce/All-Gather/All-to-All/Reduce-Scatter
+    SchedulingPolicy pref_scheduling, // 优先级策略，转成内部 pri 值
     EventType event,
     Callable* layer_ptr ) {
+  
+  // 得到推荐的 chunk size 大小，推导出需要多少个 streams
   uint64_t chunk_size = determine_chunk_size(size, collective_type);
   if(id == 0) std::cout << "chunk size is: " << chunk_size << " , size is: " << size << " , layer_num is: " << layer_num << " , node: " << id << std::endl;
   uint64_t recommended_chunk_size = chunk_size;
   int streams = ceil(((double)size) / chunk_size);
   int64_t tmp;
+
+  // 创建 DataSet 与调度优先级
   DataSet* dataset = new DataSet(streams);
   #ifdef PHY_MTP
   if (event != EventType::NONE && layer_ptr != nullptr) {
@@ -1450,6 +1470,8 @@ DataSet* Device::generate_collective(
   #endif
   int pri = get_priority(pref_scheduling);
   int count = 0;
+
+  // 若当前设备使用 OfflineGreedy 调度且跨 tick，重置负载统计
   if (id == 0 &&
       (inter_dimension_scheduling == InterDimensionScheduling::OfflineGreedy ||
        inter_dimension_scheduling ==
@@ -1459,15 +1481,20 @@ DataSet* Device::generate_collective(
       last_scheduled_collective = Device::boostedTick();
     }
   }
-
+  
+  // 每次迭代按实际剩余大小裁剪 chunk_size
   while (size > 0) {
     count++;
     chunk_size=std::min(chunk_size,size); 
-    std::vector<int> dim_mapper(topology->get_num_of_dimensions());
+    std::vector<int> dim_mapper(topology->get_num_of_dimensions()); // 构造维度映射
     std::iota(std::begin(dim_mapper), std::end(dim_mapper), 0);
+    
+    // 针对 All_Gather 反转维度顺序
     if (collective_type == ComType::All_Gather) {
       std::reverse(dim_mapper.begin(), dim_mapper.end());
     }
+    
+    // 
     if (inter_dimension_scheduling == InterDimensionScheduling::RoundRobin) {
       std::rotate(
           dim_mapper.begin(),
@@ -1484,6 +1511,8 @@ DataSet* Device::generate_collective(
              InterDimensionScheduling::OfflineGreedy ||
          inter_dimension_scheduling ==
              InterDimensionScheduling::OfflineGreedyFlex)) {
+      
+      // 由 offline_greedy->get_chunk_scheduling 动态决定维度顺序与 chunk 大小
       uint64_t prev_size = size;
       dim_mapper = offline_greedy->get_chunk_scheduling(
           stream_counter,
@@ -1494,7 +1523,9 @@ DataSet* Device::generate_collective(
           collective_type);
       chunk_size = prev_size - size;
     }
-
+    
+    // 构建通信 phase：为当前块创建 CollectivePhase 列表 vect
+    // 专门考虑 All_to_All 的情况
     if (collective_type == ComType::All_to_All ||
         (inter_dimension_scheduling !=
              InterDimensionScheduling::OfflineGreedy &&
@@ -1505,7 +1536,9 @@ DataSet* Device::generate_collective(
     tmp = chunk_size;
     std::list<CollectivePhase> vect;
     CollectivePhase phase;
-
+    
+    // 默认或非 AllReduce 场景
+    // 按维度遍历，对参与的维度调用 generate_collective_phase，直接采用请求的 collective_type
     if (collective_type != ComType::All_Reduce ||
         collectiveOptimization == CollectiveOptimization::Baseline) {
       for (int dim = 0; dim < topology->get_num_of_dimensions(); dim++) {
@@ -1529,7 +1562,11 @@ DataSet* Device::generate_collective(
         vect.push_back(phase);
         tmp = phase.final_data_size;
       }
-    } else if (
+    } 
+
+    // AllReduce 且 Greedy 调度
+    // 先在所有维度上串行生成 Reduce-Scatter，再逆序生成 All-Gather，实现两阶段优化
+    else if (
         inter_dimension_scheduling == InterDimensionScheduling::OfflineGreedy ||
         inter_dimension_scheduling ==
             InterDimensionScheduling::OfflineGreedyFlex ||
@@ -1578,7 +1615,11 @@ DataSet* Device::generate_collective(
         vect.push_back(phase);
         tmp = phase.final_data_size;
       }
-    } else {
+    }
+    
+    // AllReduce 且 非 Baseline/Greedy 调度
+    // 查找最后一个活跃维度，在其之前的维度执行 Reduce-Scatter，在最后活跃维度执行 All-Reduce 本体，之后逆序执行 All-Gather，完成典型 RS–AR–AG 流程
+    else {
       int dim = 0;
       int last_active_dim = 0;
       for (dim = 0; dim < topology->get_num_of_dimensions(); dim++) {
@@ -1654,6 +1695,8 @@ DataSet* Device::generate_collective(
         tmp = phase.final_data_size;
       }
     }
+    
+    // 若 vect 非空，创建 StreamBaseline 并放入 ready list
     if (vect.size() > 0) {
       StreamBaseline* newStream =
           new StreamBaseline(this, dataset, stream_counter++, vect, pri);
@@ -1664,17 +1707,23 @@ DataSet* Device::generate_collective(
       insert_into_ready_list(newStream);
       MockNcclLog* NcclLog = MockNcclLog::getInstance();
       NcclLog->writeLog(NcclLogLevel::DEBUG,"Device::generate_collective finished");
-    } else {
+    }
+    
+    // 若无法生成 phase，标记 dataset 为非活跃并终止
+    else {
       dataset->active = false;
       break;
     }
   }
+
+  // 收尾工作：成功生成的情况下累加 streams_injected 与 dataset->total_streams，返回 DataSet，供上层触发后续模拟流程
   if (dataset->active) {
     streams_injected += count;
     dataset->total_streams = count;
   }
   return dataset;
 }
+
 void Device::call_events() {
   if(event_queue.find(Device::boostedTick())==event_queue.end()){
     goto FINISH_CHECK;
