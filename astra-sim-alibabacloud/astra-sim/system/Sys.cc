@@ -1106,7 +1106,9 @@ DataSet* Device::generate_all_to_all(
       layer_ptr);
 }
 
-
+// generate_collective_phase(...) 函数
+// 根据 collective_implementation->type 选择下层实现
+// 输出：new Ring(...) / new AllToAll(...) / new DoubleBinaryTreeAllReduce(...) / new HalvingDoubling(...) 对象
 CollectivePhase Device::generate_collective_phase(
     ComType collective_type,
     int layer_num,
@@ -1439,8 +1441,8 @@ std::shared_ptr<void> Device::generate_flow_model(ParallelStrategy comm_ps, uint
     return  pComm->get_flow_model(data_size,collective_type,this->workload->index,current_state);
 }
 
-// 
-// 输入：
+// generate_collective(...) 函数
+// 输入：描述一次集合通信操作的参数
 // 输出：一个 DataSet*，里面包含本次通信要注入的 StreamBaseline 流列表。
 
 DataSet* Device::generate_collective(
@@ -1494,7 +1496,7 @@ DataSet* Device::generate_collective(
       std::reverse(dim_mapper.begin(), dim_mapper.end());
     }
     
-    // 
+    // 对 RoundRobin/OfflineGreedy 等调度策略进行旋转
     if (inter_dimension_scheduling == InterDimensionScheduling::RoundRobin) {
       std::rotate(
           dim_mapper.begin(),
