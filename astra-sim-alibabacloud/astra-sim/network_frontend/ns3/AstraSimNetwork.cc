@@ -43,6 +43,10 @@
 #include "astra-sim/system/Device_NVSwitch.hh"
 #include "astra-sim/system/Device_Switch.hh"
 
+// 链路和端口相关头文件
+#include "astra-sim/system/Connect_Port.hh"
+#include "astra-sim/system/Connect_Link.hh"
+
 #ifdef NS3_MTP
 #include "ns3/mtp-interface.h"
 #endif
