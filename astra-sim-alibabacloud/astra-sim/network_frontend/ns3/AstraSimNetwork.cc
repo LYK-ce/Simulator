@@ -297,11 +297,11 @@ int main(int argc, char *argv[]) {
     networks[j] =
         new ASTRASimNetwork(j ,0);
     systems[j ] = new AstraSim::Sys(
-        networks[j], 
-        nullptr,                  
-        j,                        
-        0,               
-        1,                        
+        networks[j], //网络接口
+        nullptr,     //内存接口   
+        j,           //节点ID号             
+        0,           //节点ID偏移量（不知道用来做什么的）    
+        1,            //workload跑几遍？            
         {nodes_num},        
         {1},          
         "", 

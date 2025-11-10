@@ -117,15 +117,15 @@ Sys::~Sys() {
 }
 
 Sys::Sys(
-    AstraNetworkAPI* NI,
-    AstraMemoryAPI* MEM,
-    int id,
-    int npu_offset,
-    int num_passes,
-    std::vector<int> physical_dims,
-    std::vector<int> queues_per_dim,
-    std::string my_sys,
-    std::string my_workload,
+    AstraNetworkAPI* NI,  //网络接口
+    AstraMemoryAPI* MEM,  //内存接口
+    int id,                 //当前节点ID
+    int npu_offset,         //节点ID偏移量
+    int num_passes,         //workload跑几遍
+    std::vector<int> physical_dims,     //物理维度里各有多少个节点？
+    std::vector<int> queues_per_dim,    //每一维上给机器准备几条逻辑队列？
+    std::string my_sys,                 //名称
+    std::string my_workload,            //解析文件名
     float comm_scale,
     float compute_scale,
     float injection_scale,
@@ -135,8 +135,8 @@ Sys::Sys(
     std::string run_name,
     bool seprate_log,
     bool rendezvous_enabled,
-    GPUType _gpu_type,
-    std::vector<int>_all_gpus,
+    GPUType _gpu_type,      //gpu种类
+    std::vector<int>_all_gpus,//
     std::vector<int>_NVSwitchs,
     int _ngpus_per_node) {
   scheduler_unit = nullptr;
@@ -209,79 +209,87 @@ Sys::Sys(
   int element = 0;
   all_queues = 0;
   total_nodes = 1;
-  for (int current_dim = 0; current_dim < queues_per_dim.size();
-       current_dim++) {
-    all_queues += queues_per_dim[current_dim];
-    bool enabled = !boost_mode;
-    if (id % total_nodes == 0 &&
-        id < total_nodes * physical_dims[current_dim]) {
-      enabled = true;
-    }
-    if (!enabled) {
-      total_disabled += queues_per_dim[current_dim];
-    }
-    if (physical_dims[current_dim] >= 1) {
-      total_nodes *= physical_dims[current_dim];
-    }
-    for (int j = 0; j < queues_per_dim[current_dim]; j++) {
-      std::list<BaseStream*> temp;
-      active_Streams[element] = temp;
-      std::list<int> pri;
-      stream_priorities[element] = pri;
-      element++;
-    }
-  }
-  if (all_queues == total_disabled) {
-    NI->enabled = false;
-    std::cout << "Node " << id << " has been totally disabled" << std::endl;
-  }
-  concurrent_streams =
-      (int)std::ceil(((double)active_chunks_per_dimension) / queues_per_dim[0]);
-  active_first_phase = 100000000;
-  if (id == 0) {
-    std::cout
-        << "The final active chunks per dimension 1 after allocating to queues is: "
-        << concurrent_streams * queues_per_dim[0] << std::endl;
-  }
-  max_running = 100000000;
-  scheduler_unit = new SchedulerUnit(
-      this,
-      queues_per_dim,
-      max_running,
-      active_first_phase,
-      concurrent_streams);
-  vLevels = new QueueLevels(queues_per_dim, 0, NI->get_backend_type());
 
-  logical_topologies["AllReduce"] = new GeneralComplexTopology(
-      id, physical_dims, all_reduce_implementation_per_dimension);
-  logical_topologies["ReduceScatter"] = new GeneralComplexTopology(
-      id, physical_dims, reduce_scatter_implementation_per_dimension);
-  logical_topologies["AllGather"] = new GeneralComplexTopology(
-      id, physical_dims, all_gather_implementation_per_dimension);
-  logical_topologies["AllToAll"] = new GeneralComplexTopology(
-      id, physical_dims, all_to_all_implementation_per_dimension);
-  stream_counter = 0;
-  if (id == 0) {
-    std::atexit(exiting);
-    std::cout << "total nodes: " << total_nodes << std::endl;
-  }
+  //注释点3 queue相关内容注释掉不影响运行
+  
+  // for (int current_dim = 0; current_dim < queues_per_dim.size();
+  //      current_dim++) {
+  //   all_queues += queues_per_dim[current_dim];
+  //   bool enabled = !boost_mode;
+  //   if (id % total_nodes == 0 &&
+  //       id < total_nodes * physical_dims[current_dim]) {
+  //     enabled = true;
+  //   }
+  //   if (!enabled) {
+  //     total_disabled += queues_per_dim[current_dim];
+  //   }
+  //   if (physical_dims[current_dim] >= 1) {
+  //     total_nodes *= physical_dims[current_dim];
+  //   }
+  //   for (int j = 0; j < queues_per_dim[current_dim]; j++) {
+  //     std::list<BaseStream*> temp;
+  //     active_Streams[element] = temp;
+  //     std::list<int> pri;
+  //     stream_priorities[element] = pri;
+  //     element++;
+  //   }
+  // }
+  // if (all_queues == total_disabled) {
+  //   NI->enabled = false;
+  //   std::cout << "Node " << id << " has been totally disabled" << std::endl;
+  // }
+  // concurrent_streams =
+  //     (int)std::ceil(((double)active_chunks_per_dimension) / queues_per_dim[0]);
+  // active_first_phase = 100000000;
+  // if (id == 0) {
+  //   std::cout
+  //       << "The final active chunks per dimension 1 after allocating to queues is: "
+  //       << concurrent_streams * queues_per_dim[0] << std::endl;
+  // }
+  max_running = 100000000;
+
+  //注释点2 拓扑相关与queue调度器相关 注释掉仍然可以运行
+  // scheduler_unit = new SchedulerUnit(
+  //     this,
+  //     queues_per_dim,
+  //     max_running,
+  //     active_first_phase,
+  //     concurrent_streams);
+  // vLevels = new QueueLevels(queues_per_dim, 0, NI->get_backend_type());
+
+  // logical_topologies["AllReduce"] = new GeneralComplexTopology(
+  //     id, physical_dims, all_reduce_implementation_per_dimension);
+  // logical_topologies["ReduceScatter"] = new GeneralComplexTopology(
+  //     id, physical_dims, reduce_scatter_implementation_per_dimension);
+  // logical_topologies["AllGather"] = new GeneralComplexTopology(
+  //     id, physical_dims, all_gather_implementation_per_dimension);
+  // logical_topologies["AllToAll"] = new GeneralComplexTopology(
+  //     id, physical_dims, all_to_all_implementation_per_dimension);
+  // stream_counter = 0;
+  // if (id == 0) {
+  //   std::atexit(exiting);
+  //   std::cout << "total nodes: " << total_nodes << std::endl;
+  // }
   #ifdef ANALYTI
   nic_ratio_data = readCSV(NIC_RATIO_PATH);
   nvlink_ratio_data = readCSV(NVLINK_RATIO_PATH);
   ata_ratio_data = readCSV(ATA_RATIO_PATH);
   #endif
-  NI->sim_init(MEM);
-  memBus = new MemBus(
-      "NPU",
-      "MA",
-      this,
-      inp_L,
-      inp_o,
-      inp_g,
-      inp_G,
-      model_shared_bus,
-      communication_delay,
-      true);
+
+  //注释点1：先尝试注释掉这一部分内容，取消内存总线模拟与网卡模拟
+  // NI->sim_init(MEM);
+  // memBus = new MemBus(
+  //     "NPU",
+  //     "MA",
+  //     this,
+  //     inp_L,
+  //     inp_o,
+  //     inp_g,
+  //     inp_G,
+  //     model_shared_bus,
+  //     communication_delay,
+  //     true);
+
   workload = new Workload_StateMachine(
   //workload = new Workload(
       run_name,
